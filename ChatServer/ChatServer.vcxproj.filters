@@ -13,10 +13,171 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ReadWriteLock">
+      <UniqueIdentifier>{b6e31c4a-ab87-437d-bfb7-a885fb25c5d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Macro">
+      <UniqueIdentifier>{64446c90-a607-4c24-88d8-82b2cc221c97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TLS">
+      <UniqueIdentifier>{b705d31d-604d-43cd-88f1-31611809086d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{195050ec-f219-4766-a892-19cc3dead809}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{37c1394e-680e-49ac-8f42-42be00246589}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Types">
+      <UniqueIdentifier>{930030f2-84b8-4bf3-b15a-f963b98fc6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{7f1f1c3f-c627-480a-af87-6f7ec7e60528}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{6877e5e6-417e-4e25-9646-26b1b8f0f643}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ReadWriteLock.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="WriteLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="TLS.cpp">
+      <Filter>TLS</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="FixedSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryHeader.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="MultiSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="StompAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Iocp.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpStream.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpListener.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="CorePch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="StlAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="PoolAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ReadWriteLock.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="WriteLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="Macro.h">
+      <Filter>Macro</Filter>
+    </ClInclude>
+    <ClInclude Include="TLS.h">
+      <Filter>TLS</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="FixedSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryHeader.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="StompAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Iocp.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpStream.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="CorePch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="StlAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="PoolAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
