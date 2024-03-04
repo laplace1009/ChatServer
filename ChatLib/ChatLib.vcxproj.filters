@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{35bf4eee-6e4d-4390-8773-403795e887e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Macro">
+      <UniqueIdentifier>{791208e3-5a46-44d9-a5b7-bee923847503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{5657546d-e14d-4f03-aa81-1e97f56be221}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ReadWriteLock">
+      <UniqueIdentifier>{b6c90561-0cac-4cb3-866a-817cb4883ee8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{11577a06-881d-43f0-b4b3-c7b47b4fc9ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{363c5f9c-1078-4922-b805-482c4c46dd0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Main">
+      <UniqueIdentifier>{34eb57f1-8260-42f1-83b3-314ea7fb70f6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TLS.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\CorePch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Global.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\BaseAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Container.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\FixedSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Macro.h">
+      <Filter>Macro</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Memory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\MemoryHeader.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\MemoryPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\MultiSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\ObjectPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\PoolAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\ReadLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\ReadWriteLock.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\StompAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\StlAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Iocp.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\TcpListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\TcpStream.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Thread.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\WriteLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ChatLib\Types.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ChatLib.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TLS.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\CorePch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\Global.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\BaseAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\FixedSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\Memory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\MemoryHeader.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\MemoryPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\MultiSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\ObjectPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\PoolAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\ReadLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\ReadWriteLock.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\StlAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\StompAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\Iocp.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\TcpListener.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\TcpStream.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\Thread.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ChatLib\WriteLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

@@ -6,10 +6,10 @@
 class Iocp
 {
 public:
-	Iocp();
-	~Iocp();
+	~Iocp() noexcept;
 
 public:
+	auto Init() -> bool;
 	auto GetHandlePtr() -> HANDLE*;
 	auto Register(TcpStream& stream) -> bool;
 	//auto Dispatch(TcpStream& stream, uint32 timeout = INFINITE) -> bool;

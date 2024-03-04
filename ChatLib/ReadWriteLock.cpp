@@ -1,10 +1,5 @@
+#include "pch.h"
 #include "ReadWriteLock.h"
-#include "Types.h"
-#include "Macro.h"
-#include "TLS.h"
-#include <iostream>
-#include <thread>
-#include <chrono>
 
 auto ReadWriteLock::WriteLock() -> void
 {

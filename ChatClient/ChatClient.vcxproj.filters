@@ -13,30 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Main">
-      <UniqueIdentifier>{7f1f1c3f-c627-480a-af87-6f7ec7e60528}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Server">
-      <UniqueIdentifier>{6877e5e6-417e-4e25-9646-26b1b8f0f643}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Server.cpp">
-      <Filter>Server</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
-      <Filter>Main</Filter>
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Server.h">
-      <Filter>Server</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
-      <Filter>Main</Filter>
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

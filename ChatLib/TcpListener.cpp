@@ -1,6 +1,14 @@
 #include "pch.h"
 #include "TcpListener.h"
 
+auto TcpListener::Init() -> bool
+{
+	if (WSAStartup(MAKEWORD(2, 2), &mWsaData) != 0)
+		return false;
+
+	return mServer.Init();
+}
+
 auto TcpListener::BindAny(uint16 port) -> void
 {
 	mServer.GetSocketInfoPtr()->addr.sin_family = AF_INET;
@@ -34,13 +42,31 @@ auto TcpListener::Bind(std::string_view addr, uint16 port) -> void
 		return;
 }
 
-auto TcpListener::Accept() -> std::optional<TcpStream>
+auto TcpListener::Accept() -> TcpStream
 {
 	TcpStream client;
 	int addrLen = sizeof(client.GetSocketInfoPtr()->addr);
 	client.GetSocketInfoPtr()->socket = accept(mServer.GetSocketInfoPtr()->socket, reinterpret_cast<SOCKADDR*>(&client.GetSocketInfoPtr()->addr), &addrLen);
-	if (client.GetSocketInfoPtr()->socket == INVALID_SOCKET)
-		return {};
+
+	return client;
+}
+
+auto TcpListener::AcceptEx() -> TcpStream
+{
+	TcpStream client;
+	DWORD bytesReceived = 0;
+
+	if (false == ::AcceptEx(mServer.GetSocketInfoPtr()->socket, client.GetSocketInfoPtr()->socket,
+		client.GetSocketInfoPtr()->buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, OUT & bytesReceived,
+		static_cast<LPOVERLAPPED>(&client.GetSocketInfoPtr()->overlapped)))
+	{
+		const int32 error = ::WSAGetLastError();
+		if (error != WSA_IO_PENDING)
+		{
+			AcceptEx();
+		}
+	}
+
 
 	return client;
 }

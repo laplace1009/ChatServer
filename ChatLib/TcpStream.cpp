@@ -1,22 +1,24 @@
 #include "pch.h"
 #include "TcpStream.h"
+#include "Memory.h"
 
-TcpStream::TcpStream()
+auto TcpStream::Init() -> bool
 {
-	mSocket.buf = new CHAR[MAX_BUFF_SIZE + 1];
+	mSocket.buf = xnew<CHAR>(MAX_BUFF_SIZE + 1);
 	mSocket.wsaBuf.buf = mSocket.buf;
 	mSocket.wsaBuf.len = MAX_BUFF_SIZE;
-	memset(&mSocket.overlapped, 0, sizeof(mSocket.overlapped));
+	memset(&mSocket.overlapped.wSaOverlapped, 0, sizeof(WSAOVERLAPPED));
 	memset(&mSocket.addr, 0, sizeof(mSocket.addr));
 	mSocket.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+	if (mSocket.socket == SOCKET_ERROR)
+		return false;
 
-	if (mSocket.socket == INVALID_SOCKET)
-		CRASH("WSASocket()");
+	return true;
 }
 
-TcpStream::~TcpStream() noexcept
+auto TcpStream::Close() -> void
 {
-	delete[] mSocket.buf;
+	xdelete<CHAR>(mSocket.buf);
 	closesocket(mSocket.socket);
 }
 
@@ -32,12 +34,12 @@ auto TcpStream::Recv(uint32 offset) -> int
 {
 	DWORD flags = 0;
 
-	return WSARecv(mSocket.socket, &mSocket.wsaBuf, 1, &mSocket.recvBytes, OUT & flags, &mSocket.overlapped, NULL);
+	return WSARecv(mSocket.socket, &mSocket.wsaBuf, 1, &mSocket.recvBytes, OUT & flags, reinterpret_cast<LPWSAOVERLAPPED>(&mSocket.overlapped), NULL);
 }
 
 auto TcpStream::Send(CHAR* message, uint32 msgLength, uint32 offset, DWORD bufCount) -> int
 {
-	return WSASend(mSocket.socket, &mSocket.wsaBuf, bufCount, &mSocket.sendBytes, 0, &mSocket.overlapped, NULL);
+	return WSASend(mSocket.socket, &mSocket.wsaBuf, bufCount, &mSocket.sendBytes, 0, reinterpret_cast<LPWSAOVERLAPPED>(&mSocket.overlapped), NULL);
 }
 
 auto TcpStream::SetSocketOpt(int option) -> int
@@ -49,6 +51,11 @@ auto TcpStream::SetSocketOpt(int option) -> int
 }
 
 auto TcpStream::GetSocketInfoPtr() -> SocketInfo*
+{
+	return &mSocket;
+}
+
+auto TcpStream::GetSocketInfoPtr() const -> const SocketInfo*
 {
 	return &mSocket;
 }

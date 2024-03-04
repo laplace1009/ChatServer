@@ -23,11 +23,7 @@ public:
 
 	void deallocate(T* ptr, size_t size)
 	{
-		MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
-
-		const int32 allocSize = header->GetAllocSize();
-
-		StompAllocator::Release(header);
+		PoolAllocator::Release(ptr);
 	}
 };
 
