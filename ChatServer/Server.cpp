@@ -25,18 +25,10 @@ auto Server::Run(uint16 port) -> bool
 
 		}*/
 
-	for (int32 i = 0; i < 5; ++i)
+	while (true)
 	{
-		GThreads->Launch([=]()
-			{
-				while (true)
-				{
-					TcpStream client = mSocket.Accept();
-					
-				}
-			});
+		
 	}
-
 	
 
 	return true;

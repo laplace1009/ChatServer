@@ -39,6 +39,11 @@ class TcpStream
 	};
 
 public:
+	static LPFN_CONNECTEX		LpFnConnectEx;
+	static LPFN_DISCONNECTEX	LpFnDisconnectEx;
+	static LPFN_ACCEPTEX		LpFnAcceptEx;
+
+public:
 	auto Init() -> bool;
 	auto Close() -> void;
 	auto Connect(std::string_view addr, uint16 port) -> int;
@@ -50,6 +55,9 @@ public:
 	auto GetSocketInfoPtr() -> SocketInfo*;
 	auto GetSocketInfoPtr() const -> const SocketInfo*;
 	auto GetMaxBuffSize() -> uint32;
+
+private:
+	auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;
 
 private:
 	SocketInfo mSocket;

@@ -1,19 +1,16 @@
 #include "pch.h"
 #include <WinSock2.h>
-
-enum class IOEvent
-{
-	ACCEPT,
-	RECV,
-	SEND,
-	DISCONNECT,
-};
+#include "Iocp.h"
+#include "TcpStream.h"
+#include <thread>
 
 int main()
 {
 	using namespace std;
-
-	cout << "Hello, World\n" << endl;
-	
+	std::this_thread::sleep_for(1000ms);
+	IOEvent event = IOEvent::ACCEPT;
+	TcpStream client;
+	client.Init();
+	client.Connect("127.0.0.1", 8000);
 	return 0;
 }
