@@ -1,6 +1,6 @@
 #pragma once
 #include "Types.h"
-#include <string_view>
+#include <string>
 #include <optional>
 #include <variant>
 #include <WinSock2.h>
@@ -24,7 +24,7 @@ class TcpStream
 {
 	enum
 	{
-		MAX_BUFF_SIZE = 4096,
+		MAX_BUFF_SIZE = 2048,
 	};
 
 	struct SocketInfo
@@ -44,8 +44,12 @@ public:
 	static LPFN_ACCEPTEX		LpFnAcceptEx;
 
 public:
+	auto SetAddr(std::string addr, uint16 port) -> bool;
+
+public:
 	auto Init() -> bool;
 	auto Close() -> void;
+	
 	auto Connect(std::string_view addr, uint16 port) -> int;
 	auto Recv(uint32 offset) -> int;
 	auto Send(CHAR* message, uint32 msgLength, uint32 offset, DWORD bufCount) -> int;

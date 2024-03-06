@@ -27,6 +27,6 @@ private:
 private:
 	TcpListener mSocket;
 	Iocp mIocp;
-	Vector<TcpStream> mClients;
+	std::vector<TcpStream> mClients;
 };
 

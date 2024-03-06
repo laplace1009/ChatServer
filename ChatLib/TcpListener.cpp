@@ -51,26 +51,6 @@ auto TcpListener::Accept() -> TcpStream
 	return client;
 }
 
-auto TcpListener::AcceptEx() -> TcpStream
-{
-	TcpStream client;
-	DWORD bytesReceived = 0;
-
-	if (false == ::AcceptEx(mServer.GetSocketInfoPtr()->socket, client.GetSocketInfoPtr()->socket,
-		client.GetSocketInfoPtr()->buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, OUT & bytesReceived,
-		static_cast<LPOVERLAPPED>(&client.GetSocketInfoPtr()->overlapped)))
-	{
-		const int32 error = ::WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-		{
-			AcceptEx();
-		}
-	}
-
-
-	return client;
-}
-
 auto TcpListener::Recv(OUT TcpStream* client) -> int
 {
 	return recv(client->GetSocketInfoPtr()->socket, reinterpret_cast<char*>(client->GetSocketInfoPtr()->buf), sizeof(client->GetSocketInfoPtr()->addr), 0);

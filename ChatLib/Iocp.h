@@ -10,7 +10,8 @@ public:
 
 public:
 	auto Init() -> bool;
-	auto GetHandlePtr() -> HANDLE*;
+	auto GetHandle() -> HANDLE;
+	auto SetHandle(HANDLE h) -> void;
 	auto Register(TcpStream& stream) -> bool;
 	//auto Dispatch(TcpStream& stream, uint32 timeout = INFINITE) -> bool;
 

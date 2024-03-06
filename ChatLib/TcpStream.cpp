@@ -2,20 +2,23 @@
 #include "TcpStream.h"
 #include "Memory.h"
 
-LPFN_CONNECTEX		TcpStream::LpFnConnectEx		= nullptr;
+LPFN_CONNECTEX		TcpStream::LpFnConnectEx	= nullptr;
 LPFN_DISCONNECTEX	TcpStream::LpFnDisconnectEx	= nullptr;
 LPFN_ACCEPTEX		TcpStream::LpFnAcceptEx		= nullptr;
 
 auto TcpStream::Init() -> bool
 {
-	mSocket.buf = xnew<CHAR>(MAX_BUFF_SIZE + 1);
+	mSocket.buf = static_cast<char*>(PoolAllocator::Allocate(MAX_BUFF_SIZE + 1));
 	mSocket.wsaBuf.buf = mSocket.buf;
 	mSocket.wsaBuf.len = MAX_BUFF_SIZE;
 	ZeroMemory(&mSocket.overlapped.wSaOverlapped, sizeof(WSAOVERLAPPED));
 	ZeroMemory(&mSocket.addr, sizeof(mSocket.addr));
 	mSocket.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-	if (mSocket.socket == SOCKET_ERROR)
+	if (mSocket.socket == INVALID_SOCKET)
+	{
+		delete[] mSocket.buf;
 		return false;
+	}
 
 	if (bindWsaIoctl(WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&LpFnConnectEx)) == false)
 		return false;
@@ -33,6 +36,16 @@ auto TcpStream::Close() -> void
 {
 	xdelete<CHAR>(mSocket.buf);
 	closesocket(mSocket.socket);
+}
+
+auto TcpStream::SetAddr(std::string addr, uint16 port) -> bool
+{
+	mSocket.addr.sin_family = AF_INET;
+	mSocket.addr.sin_port = htons(port);
+	if (inet_pton(AF_INET, addr.c_str(), &mSocket.addr.sin_addr) == 1)
+		return true;
+
+	return false;
 }
 
 auto TcpStream::Connect(std::string_view addr, uint16 port) -> int

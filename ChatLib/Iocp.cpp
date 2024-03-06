@@ -15,9 +15,14 @@ auto Iocp::Init() -> bool
 	return true;
 }
 
-auto Iocp::GetHandlePtr() -> HANDLE*
+auto Iocp::GetHandle() -> HANDLE
 {
-	return &mHandle;
+	return mHandle;
+}
+
+auto Iocp::SetHandle(HANDLE h) -> void
+{
+	mHandle = h;
 }
 
 auto Iocp::Register(TcpStream& stream) -> bool

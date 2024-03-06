@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <string_view>
+#include <string>
 #include <vector>
 #include <chrono>
 #include <thread>
@@ -17,4 +18,4 @@
 #include <WinSock2.h>
 #include <MSWSock.h>
 #include <WS2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "Ws2_32.lib")

@@ -9,7 +9,6 @@ public:
 	auto BindAny(uint16 port) -> void;
 	auto Bind(std::string_view addr, uint16 port) -> void;
 	auto Accept() -> TcpStream;
-	auto AcceptEx() -> TcpStream;
 	auto Recv(OUT TcpStream* client) -> int;
 	auto Send(TcpStream* client, int retVal) -> int;
 	auto SwitchSyncAsync(u_long swt) -> int;
