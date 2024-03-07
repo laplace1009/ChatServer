@@ -4,7 +4,6 @@
 
 auto PoolAllocator::Allocate(int32 size) -> void*
 {
-    std::cout << size << std::endl;
     return GMemory->Allocate(size);
 }
 

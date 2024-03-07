@@ -27,13 +27,12 @@ class TcpStream
 		MAX_BUFF_SIZE = 2048,
 	};
 
-	struct SocketInfo
+	struct alignas(16) SocketInfo
 	{
 		OVERLAPPEDEX overlapped;
 		SOCKET socket;
 		SOCKADDR_IN addr;
-		CHAR* buf;
-		WSABUF wsaBuf;
+		WSABUF buf;
 		DWORD recvBytes;
 		DWORD sendBytes;
 	};
@@ -50,11 +49,22 @@ public:
 	auto Init() -> bool;
 	auto Close() -> void;
 	
-	auto Connect(std::string_view addr, uint16 port) -> int;
+	auto Connect() -> bool;
+	auto Connect(std::string addr, uint16 port) -> bool;
 	auto Recv(uint32 offset) -> int;
-	auto Send(CHAR* message, uint32 msgLength, uint32 offset, DWORD bufCount) -> int;
+	auto Send(TcpStream& client) -> int;
 
 public:
+	auto GetSocket() const -> const SOCKET;
+	auto GetSocket() -> SOCKET;
+	auto SetSocket(SOCKET socket) -> void;
+	auto GetAddrPtr() -> SOCKADDR_IN*;
+	auto GetBuffer() -> WSABUF*;
+	auto GetRecvBytes() const -> const DWORD;
+	auto SetRecvBtyes(DWORD size) -> void;
+	auto GetSendBytes() const -> const DWORD;
+	auto SetSendBytes(DWORD size) -> void;
+	auto GetOverlappedPtr() -> LPOVERLAPPED;
 	auto SetSocketOpt(int option) -> int;
 	auto GetSocketInfoPtr() -> SocketInfo*;
 	auto GetSocketInfoPtr() const -> const SocketInfo*;

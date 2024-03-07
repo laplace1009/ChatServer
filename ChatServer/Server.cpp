@@ -15,49 +15,50 @@ auto Server::Run(uint16 port) -> bool
 		return false;
 
 	std::cout << "server on" << std::endl;
-	TcpStream stream;
-	stream.Init();
-	SOCKET client = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+	TcpStream client;
+	client.Init();
+	DWORD recvBytes;
 	DWORD cbTransfereed;
-	char TestBuffer[1024];
 	while (true)
 	{
-		
-		if (TcpStream::LpFnAcceptEx(mSocket.GetServerSocketPtr()->GetSocketInfoPtr()->socket,
-			stream.GetSocketInfoPtr()->socket,
-			stream.GetSocketInfoPtr()->buf,
+		if (false == TcpStream::LpFnAcceptEx(mSocket.GetServerSocketPtr()->GetSocketInfoPtr()->socket,
+			client.GetSocket(),
+			client.GetBuffer(),
 			0,
 			sizeof(SOCKADDR_IN) + 16,
 			sizeof(SOCKADDR_IN) + 16,
-			&cbTransfereed,
-			reinterpret_cast<LPOVERLAPPED>(&mSocket.GetServerSocketPtr()->GetSocketInfoPtr()->overlapped)))
+			&recvBytes,
+			reinterpret_cast<LPOVERLAPPED>(mSocket.GetOverlappedPtr())))
 		{
-
+			const int32 error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
+			{
+				// 채워 넣기
+			}
+			else
+			{
+				
+			}
 		}
-		else
+		int addrLen = sizeof(SOCKADDR_IN);
+		/*bool retval = GetQueuedCompletionStatus(mIocp.GetHandle(), &cbTransfereed, &client.GetSocketInfoPtr()->socket, (LPOVERLAPPED*)&client.GetSocketInfoPtr()->overlapped, INFINITE);
+		std::cout << retval << std::endl;*/
+		if (0 == getpeername(client.GetSocketInfoPtr()->socket, (SOCKADDR*)&client.GetSocketInfoPtr()->addr, &addrLen))
 		{
-			std::cout << WSAGetLastError() << std::endl;
-			Sleep(500);
-			continue;
+			inet_ntop(AF_INET, &client.GetAddrPtr()->sin_addr, client.GetBuffer()->buf, 2048);
+			std::cout << "[TCP 서버] 클라이언트 종료: IP 주소 = " << client.GetBuffer()->buf << ", 포트 번호 = " << ntohs(client.GetSocketInfoPtr()->addr.sin_port) << std::endl;
 		}
-		/*int addrLen = sizeof(SOCKADDR_IN);
-		int retval = GetQueuedCompletionStatus(mIocp.GetHandle(), &cbTransfereed, (PULONG_PTR)&client.GetSocketInfoPtr()->socket, (LPOVERLAPPED*)&client.GetSocketInfoPtr()->overlapped, INFINITE);
-		std::cout << retval << std::endl;
-		getpeername(client.GetSocketInfoPtr()->socket, (SOCKADDR*)&client.GetSocketInfoPtr()->addr, &addrLen);
-		inet_ntop(AF_INET, &client.GetSocketInfoPtr()->addr.sin_addr, client.GetSocketInfoPtr()->buf, 4096);
-		if (retval == 0 || cbTransfereed == 0)
-		{
-			std::cout << "[TCP 서버] 클라이언트 종료: IP 주소 = " << client.GetSocketInfoPtr()->buf << ", 포트 번호 = " << ntohs(client.GetSocketInfoPtr()->addr.sin_port) << std::endl;
-			break;
-		}
-		::Sleep(100);*/
+		
+		//std::cout << "[TCP 서버] 클라이언트 종료: IP 주소 = " << client.GetBuffer()->buf << ", 포트 번호 = " << ntohs(client.GetSocketInfoPtr()->addr.sin_port) << std::endl;
+		
+		::Sleep(100);
 	}
 	
 
 	return true;
 }
 
-auto Server::Run(std::string_view addr, uint16 port) -> bool
+auto Server::Run(std::string addr, uint16 port) -> bool
 {
 	// Error 따로 정의 해서 내보내기
 	if (init(addr, port) == false)
@@ -106,7 +107,7 @@ auto Server::init(uint16 port) -> bool
 	return true;
 }
 
-auto Server::init(std::string_view addr, uint16 port) -> bool
+auto Server::init(std::string addr, uint16 port) -> bool
 {
 	mSocket.Bind(addr, port);
 
