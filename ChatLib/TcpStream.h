@@ -43,29 +43,34 @@ public:
 	static LPFN_ACCEPTEX		LpFnAcceptEx;
 
 public:
-	auto SetAddr(std::string addr, uint16 port) -> bool;
+	static auto Send(TcpStream& stream) -> bool;
+	static auto Recv(TcpStream& stream) -> bool;
 
 public:
 	auto Init() -> bool;
 	auto Close() -> void;
 	
+	auto Bind() -> bool;
 	auto Connect() -> bool;
 	auto Connect(std::string addr, uint16 port) -> bool;
-	auto Recv(uint32 offset) -> int;
-	auto Send(TcpStream& client) -> int;
 
 public:
 	auto GetSocket() const -> const SOCKET;
 	auto GetSocket() -> SOCKET;
 	auto SetSocket(SOCKET socket) -> void;
 	auto GetAddrPtr() -> SOCKADDR_IN*;
+	auto SetAddr(std::string addr, uint16 port) -> bool;
 	auto GetBuffer() -> WSABUF*;
 	auto GetRecvBytes() const -> const DWORD;
 	auto SetRecvBtyes(DWORD size) -> void;
 	auto GetSendBytes() const -> const DWORD;
+	auto GetSendBytes() -> DWORD;
 	auto SetSendBytes(DWORD size) -> void;
 	auto GetOverlappedPtr() -> LPOVERLAPPED;
-	auto SetSocketOpt(int option) -> int;
+	auto GetIOEvent() const -> const IOEvent;
+	auto GetIOEvent() -> IOEvent;
+	auto SetIOEvent(IOEvent event) -> void;
+	auto SetSocketOpt(int option) -> bool;
 	auto GetSocketInfoPtr() -> SocketInfo*;
 	auto GetSocketInfoPtr() const -> const SocketInfo*;
 	auto GetMaxBuffSize() -> uint32;

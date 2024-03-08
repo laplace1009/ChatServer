@@ -15,12 +15,12 @@ auto Server::Run(uint16 port) -> bool
 		return false;
 
 	std::cout << "server on" << std::endl;
-	TcpStream client;
-	client.Init();
 	DWORD recvBytes;
 	DWORD cbTransfereed;
 	while (true)
 	{
+		TcpStream client;
+		client.Init();
 		if (false == TcpStream::LpFnAcceptEx(mSocket.GetServerSocketPtr()->GetSocketInfoPtr()->socket,
 			client.GetSocket(),
 			client.GetBuffer(),
@@ -34,24 +34,36 @@ auto Server::Run(uint16 port) -> bool
 			if (error != WSA_IO_PENDING)
 			{
 				// 채워 넣기
+				std::cout << error << std::endl;
 			}
 			else
 			{
-				
+				std::cout << error << std::endl;
 			}
 		}
-		int addrLen = sizeof(SOCKADDR_IN);
-		/*bool retval = GetQueuedCompletionStatus(mIocp.GetHandle(), &cbTransfereed, &client.GetSocketInfoPtr()->socket, (LPOVERLAPPED*)&client.GetSocketInfoPtr()->overlapped, INFINITE);
-		std::cout << retval << std::endl;*/
-		if (0 == getpeername(client.GetSocketInfoPtr()->socket, (SOCKADDR*)&client.GetSocketInfoPtr()->addr, &addrLen))
+		else
 		{
-			inet_ntop(AF_INET, &client.GetAddrPtr()->sin_addr, client.GetBuffer()->buf, 2048);
-			std::cout << "[TCP 서버] 클라이언트 종료: IP 주소 = " << client.GetBuffer()->buf << ", 포트 번호 = " << ntohs(client.GetSocketInfoPtr()->addr.sin_port) << std::endl;
+			mSocket.SetSocket(SO_UPDATE_ACCEPT_CONTEXT);
+		}
+		int addrLen = sizeof(SOCKADDR_IN);
+		bool retval = GetQueuedCompletionStatus(mIocp.GetHandle(), &cbTransfereed, &client.GetSocketInfoPtr()->socket, (LPOVERLAPPED*)&client.GetSocketInfoPtr()->overlapped, INFINITE);
+		getpeername(client.GetSocketInfoPtr()->socket, (SOCKADDR*)client.GetAddrPtr(), &addrLen);
+		char addr[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &client.GetAddrPtr()->sin_addr, addr, sizeof(addr));
+		if (client.GetIOEvent() == IOEvent::ACCEPT)
+		{
+			std::cout << "IP: " << addr << "Port: " << ntohs(client.GetAddrPtr()->sin_port) << std::endl;
+			std::cout << static_cast<int>(reinterpret_cast<OVERLAPPEDEX*>(client.GetOverlappedPtr())->event) << std::endl;
+		}
+		else
+		{
+			char str[2048];
+			ZeroMemory(str, 2048);
+			memcpy(str, client.GetBuffer()->buf, client.GetBuffer()->len);
+			std::cout << str << std::endl;
 		}
 		
-		//std::cout << "[TCP 서버] 클라이언트 종료: IP 주소 = " << client.GetBuffer()->buf << ", 포트 번호 = " << ntohs(client.GetSocketInfoPtr()->addr.sin_port) << std::endl;
 		
-		::Sleep(100);
 	}
 	
 
