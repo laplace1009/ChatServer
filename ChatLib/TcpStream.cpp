@@ -41,6 +41,7 @@ auto TcpStream::Init() -> bool
 	ZeroMemory(&mSocket.addr, sizeof(mSocket.addr));
 	mSocket.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 	mSocket.overlapped.event = IOEvent::ACCEPT;
+	
 	if (mSocket.socket == INVALID_SOCKET)
 	{
 		PoolAllocator::Release(mSocket.buf.buf);
@@ -94,18 +95,6 @@ auto TcpStream::Connect(std::string addr, uint16 port) -> bool
 	mSocket.addr.sin_port = htons(port);
 	return TcpStream::LpFnConnectEx(mSocket.socket, reinterpret_cast<PSOCKADDR>(&mSocket.addr), sizeof(SOCKADDR_IN), NULL, NULL, &mSocket.recvBytes, reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped));
 }
-
-auto TcpStream::Recv(uint32 offset) -> int
-{
-	DWORD flags = 0;
-
-	return WSARecv(mSocket.socket, &mSocket.buf, 1, &mSocket.recvBytes, OUT & flags, reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped), NULL);
-}
-
-//auto TcpStream::Send(TcpStream& client) -> int
-//{
-//	return WSASend(client.GetSocket(), &mSocket.buf, 1, &mSocket.sendBytes, 0, reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped), NULL);
-//}
 
 auto TcpStream::GetSocket() const -> const SOCKET
 {
@@ -179,7 +168,8 @@ auto TcpStream::SetIOEvent(IOEvent event) -> void
 
 auto TcpStream::SetSocketOpt(int option) -> bool
 {
-	return setsockopt(mSocket.socket, SOL_SOCKET, option, NULL, 0) == 0;
+	int optLen = sizeof(option);
+	return setsockopt(mSocket.socket, SOL_SOCKET, option, nullptr, 0) == SOCKET_ERROR;
 }
 
 auto TcpStream::GetSocketInfoPtr() -> SocketInfo*
