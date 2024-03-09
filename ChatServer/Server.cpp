@@ -3,83 +3,30 @@
 #include <iostream>
 #include <thread>
 
-auto Server::Run(uint16 port) -> bool
+auto Server::Start(uint16 port) -> bool
 {
 	if (mSocket.Init() == false)
-		return false;
-
-	if (mIocp.Init() == false)
 		return false;
 
 	if (init(port) == false)
 		return false;
 
-	std::cout << "server on" << std::endl;
-	DWORD recvBytes;
-	DWORD cbTransfereed;
-	while (true)
-	{
-		TcpStream client;
-		client.Init();
-		if (false == TcpStream::LpFnAcceptEx(mSocket.GetServerSocketPtr()->GetSocketInfoPtr()->socket,
-			client.GetSocket(),
-			client.GetBuffer(),
-			0,
-			sizeof(SOCKADDR_IN) + 16,
-			sizeof(SOCKADDR_IN) + 16,
-			&recvBytes,
-			reinterpret_cast<LPOVERLAPPED>(mSocket.GetOverlappedPtr())))
-		{
-			const int32 error = WSAGetLastError();
-			if (error != WSA_IO_PENDING)
-			{
-				// 채워 넣기
-				std::cout << error << std::endl;
-			}
-			else
-			{
-				std::cout << error << std::endl;
-			}
-		}
-		else
-		{
-			mSocket.SetSocket(SO_UPDATE_ACCEPT_CONTEXT);
-		}
-		int addrLen = sizeof(SOCKADDR_IN);
-		bool retval = GetQueuedCompletionStatus(mIocp.GetHandle(), &cbTransfereed, &client.GetSocketInfoPtr()->socket, (LPOVERLAPPED*)&client.GetSocketInfoPtr()->overlapped, INFINITE);
-		getpeername(client.GetSocketInfoPtr()->socket, (SOCKADDR*)client.GetAddrPtr(), &addrLen);
-		char addr[INET_ADDRSTRLEN];
-		inet_ntop(AF_INET, &client.GetAddrPtr()->sin_addr, addr, sizeof(addr));
-		if (client.GetIOEvent() == IOEvent::ACCEPT)
-		{
-			std::cout << "IP: " << addr << "Port: " << ntohs(client.GetAddrPtr()->sin_port) << std::endl;
-			std::cout << static_cast<int>(reinterpret_cast<OVERLAPPEDEX*>(client.GetOverlappedPtr())->event) << std::endl;
-		}
-		else
-		{
-			char str[2048];
-			ZeroMemory(str, 2048);
-			memcpy(str, client.GetBuffer()->buf, client.GetBuffer()->len);
-			std::cout << str << std::endl;
-		}
-		
-		
-	}
-	
+	if (mIocp.Init() == false)
+		return false;
 
 	return true;
 }
 
-auto Server::Run(std::string addr, uint16 port) -> bool
+auto Server::Start(std::string addr, uint16 port) -> bool
 {
 	// Error 따로 정의 해서 내보내기
+	if (mSocket.Init() == false)
+		return false;
+
 	if (init(addr, port) == false)
 		return false;
 
-	if (mIocp.GetHandle() == NULL)
-		return false;
-
-	if (mIocp.Register(*mSocket.GetServerSocketPtr()) == NULL)
+	if (mIocp.Init() == NULL)
 		return false;
 
 	return true;
@@ -89,6 +36,61 @@ auto Server::Close() -> bool
 {
 	WSACleanup();
 	return false;
+}
+
+auto Server::IOAction() -> bool
+{
+	DWORD transferredBytes;
+	OVERLAPPEDEX* overlapped{ new OVERLAPPEDEX() };
+	TcpStream client;
+	client.Init();
+	bool ret = GetQueuedCompletionStatus(mIocp.GetHandle(), &transferredBytes, reinterpret_cast<PULONG_PTR>(this), reinterpret_cast<LPOVERLAPPED*>(&overlapped), 10000);
+	if (ret)
+	{
+		if (overlapped->event == IOEvent::ACCEPT)
+		{
+			while (false == TcpStream::LpFnAcceptEx(mSocket.GetSocket(), client.GetSocket(), client.GetBuffer()->buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, nullptr, client.GetOverlappedPtr()));
+
+			{
+				WriteLockGuard<ReadWriteLock&> guard(mLock);
+				while (false == mIocp.Register(client));
+				mClients.emplace_back(std::move(client));
+			}
+
+			SOCKADDR_IN addr;
+			int addrLen = sizeof(SOCKADDR_IN);
+			char addrBuf[INET_ADDRSTRLEN];
+			getpeername(client.GetSocket(), reinterpret_cast<PSOCKADDR>(&addr), &addrLen);
+			inet_ntop(AF_INET, &addr, addrBuf, sizeof(addrBuf));
+			std::cout << "Client connec to Server, Ip: " << addrBuf << " Port: " << ntohs(addr.sin_port) << std::endl;
+		}
+		else if (overlapped->event == IOEvent::RECV)
+		{
+
+		}
+		else if (overlapped->event == IOEvent::SEND)
+		{
+
+		}
+		else if (overlapped->event == IOEvent::DISCONNECT)
+		{
+
+		}
+	}
+
+	return false;
+}
+
+auto Server::Accept() -> void
+{
+	int32 addrLen = sizeof(SOCKADDR_IN);
+	TcpStream client;
+	client.Init();
+	client.GetSocketInfoPtr()->socket = ::accept(mSocket.GetSocket(), (SOCKADDR*)mSocket.GetAddrPtr(), &addrLen);
+	getpeername(client.GetSocket(), (SOCKADDR*)client.GetAddrPtr(), &addrLen);
+	char name[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, client.GetAddrPtr(), name, sizeof(name));
+	std::cout << "ip: " << name << ", port: " << ntohs(client.GetAddrPtr()->sin_port) << std::endl;
 }
 
 auto Server::Join(TcpStream&& stream) -> bool
@@ -106,31 +108,12 @@ auto Server::init(uint16 port) -> bool
 {	
 	mSocket.BindAny(port);
 
-	HANDLE h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-
-	mIocp.SetHandle(h);
-
-	if (mIocp.GetHandle() == NULL)
-		return false;
-
-	if (mIocp.Register(*mSocket.GetServerSocketPtr()) == NULL)
-		return false;
-
 	return true;
 }
 
 auto Server::init(std::string addr, uint16 port) -> bool
 {
 	mSocket.Bind(addr, port);
-
-	HANDLE h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	mIocp.SetHandle(h);
-
-	if (mIocp.GetHandle() == NULL)
-		return false;
-
-	if (mIocp.Register(*mSocket.GetServerSocketPtr()) == NULL)
-		return false;
 
 	return true;
 }
