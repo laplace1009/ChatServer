@@ -67,7 +67,7 @@ auto TcpListener::SwitchSyncAsync(u_long swt) -> int
 	return ioctlsocket(mStream.GetSocket(), FIONBIO, &swt);
 }
 
-auto TcpListener::GetServerSocketPtr() -> TcpStream*
+auto TcpListener::GetStreamPtr() -> TcpStream*
 {
 	return &mStream;
 }
