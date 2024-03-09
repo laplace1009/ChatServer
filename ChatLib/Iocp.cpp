@@ -27,8 +27,9 @@ auto Iocp::SetHandle(HANDLE h) -> void
 
 auto Iocp::Register(TcpStream& stream) -> bool
 {
-	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream.GetSocketInfoPtr()->socket), mHandle, 0, 0))
+	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream.GetSocket()), mHandle, reinterpret_cast<ULONG_PTR>(&stream), 0))
 		return false;
 
 	return true;
 }
+

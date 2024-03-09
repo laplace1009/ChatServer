@@ -6,6 +6,9 @@
 #include "Container.h"
 #include "TLS.h"
 #include "Thread.h"
+#include "ReadWriteLock.h"
+#include "ReadLockGuard.h"
+#include "WriteLockGuard.h"
 
 #include <iostream>
 #include <string_view>
