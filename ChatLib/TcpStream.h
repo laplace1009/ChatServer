@@ -41,6 +41,7 @@ public:
 	static LPFN_CONNECTEX		LpFnConnectEx;
 	static LPFN_DISCONNECTEX	LpFnDisconnectEx;
 	static LPFN_ACCEPTEX		LpFnAcceptEx;
+	static LPFN_GETACCEPTEXSOCKADDRS LpFnGetAcceptExSockaddrs;
 
 public:
 	static auto Send(TcpStream& stream) -> bool;

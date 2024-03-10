@@ -2,9 +2,10 @@
 #include "TcpStream.h"
 #include "Memory.h"
 
-LPFN_CONNECTEX		TcpStream::LpFnConnectEx	= nullptr;
-LPFN_DISCONNECTEX	TcpStream::LpFnDisconnectEx	= nullptr;
-LPFN_ACCEPTEX		TcpStream::LpFnAcceptEx		= nullptr;
+LPFN_CONNECTEX				TcpStream::LpFnConnectEx	= nullptr;
+LPFN_DISCONNECTEX			TcpStream::LpFnDisconnectEx	= nullptr;
+LPFN_ACCEPTEX				TcpStream::LpFnAcceptEx		= nullptr;
+LPFN_GETACCEPTEXSOCKADDRS	TcpStream::LpFnGetAcceptExSockaddrs = nullptr;
 
 auto TcpStream::Send(TcpStream& stream) -> bool
 {
@@ -36,9 +37,9 @@ auto TcpStream::Recv(TcpStream& stream) -> bool
 auto TcpStream::Init() -> bool
 {
 	mSocket.buf.buf = static_cast<char*>(PoolAllocator::Allocate(MAX_BUFF_SIZE + 1));
-	mSocket.buf.len = MAX_BUFF_SIZE;
+	mSocket.buf.len = 0;
 	ZeroMemory(&mSocket.overlapped.wSaOverlapped, sizeof(WSAOVERLAPPED));
-	ZeroMemory(&mSocket.addr, sizeof(mSocket.addr));
+	ZeroMemory(&mSocket.addr, sizeof(SOCKADDR_IN));
 	mSocket.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 	mSocket.overlapped.event = IOEvent::ACCEPT;
 	
@@ -56,6 +57,13 @@ auto TcpStream::Init() -> bool
 
 	if (bindWsaIoctl(WSAID_ACCEPTEX, reinterpret_cast<LPVOID*>(&LpFnAcceptEx)) == false)
 		return false;
+
+	if (bindWsaIoctl(WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<LPVOID*>(&LpFnGetAcceptExSockaddrs)) == false)
+	{
+		std::cout << WSAGetLastError() << std::endl;
+		return false;
+	}
+		
 
 	return true;
 }

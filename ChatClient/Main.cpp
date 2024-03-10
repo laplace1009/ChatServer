@@ -13,9 +13,23 @@ int main()
 	TcpStream client;
 	if (client.Init() == false)
 		return 1;
+
+	//if (::connect(client.GetSocket(), (SOCKADDR*)client.GetAddrPtr(), sizeof(SOCKADDR_IN)) == SOCKET_ERROR)
+	//{
+	//	// 원래 블록했어야 했는데... 너가 논블로킹으로 하라며?
+	//	if (::WSAGetLastError() == WSAEWOULDBLOCK)
+	//		std::cout << "async\n";
+	//	// 이미 연결된 상태라면 break
+	//	if (::WSAGetLastError() == WSAEISCONN)
+	//		return 1;
+	//}
 	client.Bind();
-	if (client.Connect("127.0.0.1", 8000))
+	if (client.Connect("127.0.0.1", 8000) == SOCKET_ERROR)
 	{
+		if (WSAGetLastError() == WSA_IO_PENDING)
+		{
+
+		}
 		if (client.SetSocketOpt(SO_UPDATE_CONNECT_CONTEXT) == false)
 		{
 			client.SetSocketOpt(SO_UPDATE_CONNECT_CONTEXT);
@@ -25,18 +39,22 @@ int main()
 			cout << "SetSockOpt success\n";
 		}
 	}
-
-	memcpy(client.GetBuffer()->buf, str.data(), str.length());
-	client.GetBuffer()->len = str.length();
-	
-	if (TcpStream::Send(client))
-	{
-		cout << "Send Success\n";
-	}
 	else
 	{
-		cout << "Send failure\n";
+		cout << "Connect Succecs\n";
 	}
+
+	//memcpy(client.GetBuffer()->buf, str.data(), str.length());
+	//client.GetBuffer()->len = str.length();
+	//
+	//if (TcpStream::Send(client))
+	//{
+	//	cout << "Send Success\n";
+	//}
+	//else
+	//{
+	//	cout << "Send failure\n";
+	//}
 
 	/*if (client.Init())
 	{

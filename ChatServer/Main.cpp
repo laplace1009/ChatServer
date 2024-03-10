@@ -7,8 +7,24 @@ using namespace std;
 int main(void)
 {
 	Server server;
-	
-	server.Run(8000);
+	server.Start(8000);
+
+	/*for (int i = 0; i < 1; ++i)
+	{
+		GThreads->Launch([&server]()
+			{
+				server.IOAction();
+			});
+	}
+
+	GThreads->Join();
+	server.Close();*/
+	while (true)
+	{
+		server.Accept();
+		::Sleep(500);
+	}
+	getchar();
 	
 	return 0;
 }

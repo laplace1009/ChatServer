@@ -83,14 +83,11 @@ auto Server::IOAction() -> bool
 
 auto Server::Accept() -> void
 {
-	int32 addrLen = sizeof(SOCKADDR_IN);
+	int addrLen = sizeof(SOCKADDR_IN);
 	TcpStream client;
 	client.Init();
-	client.GetSocketInfoPtr()->socket = ::accept(mSocket.GetSocket(), (SOCKADDR*)mSocket.GetAddrPtr(), &addrLen);
-	getpeername(client.GetSocket(), (SOCKADDR*)client.GetAddrPtr(), &addrLen);
-	char name[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, client.GetAddrPtr(), name, sizeof(name));
-	std::cout << "ip: " << name << ", port: " << ntohs(client.GetAddrPtr()->sin_port) << std::endl;
+
+	::Sleep(500);
 }
 
 auto Server::Join(TcpStream&& stream) -> bool
