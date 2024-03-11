@@ -38,71 +38,42 @@
     <ClInclude Include="pch.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\ChatLib\CorePch.h">
-      <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Global.h">
-      <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\BaseAllocator.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Container.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\FixedSizeMemory.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Macro.h">
-      <Filter>Macro</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Memory.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\MemoryHeader.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\MemoryPool.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\MultiSizeMemory.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\ObjectPool.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\PoolAllocator.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\ReadLockGuard.h">
-      <Filter>ReadWriteLock</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\ReadWriteLock.h">
-      <Filter>ReadWriteLock</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\StompAllocator.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\StlAllocator.h">
-      <Filter>Memory</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Iocp.h">
+    <ClInclude Include="BaseAllocator.h" />
+    <ClInclude Include="Container.h" />
+    <ClInclude Include="CorePch.h" />
+    <ClInclude Include="FixedSizeMemory.h" />
+    <ClInclude Include="Global.h" />
+    <ClInclude Include="Iocp.h" />
+    <ClInclude Include="Macro.h" />
+    <ClInclude Include="Memory.h" />
+    <ClInclude Include="MemoryHeader.h" />
+    <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="MultiSizeMemory.h" />
+    <ClInclude Include="ObjectPool.h" />
+    <ClInclude Include="PoolAllocator.h" />
+    <ClInclude Include="ReadLockGuard.h" />
+    <ClInclude Include="ReadWriteLock.h" />
+    <ClInclude Include="StlAllocator.h" />
+    <ClInclude Include="StompAllocator.h" />
+    <ClInclude Include="TcpListener.h" />
+    <ClInclude Include="TcpStream.h" />
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="Types.h" />
+    <ClInclude Include="WriteLockGuard.h" />
+    <ClInclude Include="OverlappedEx.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\ChatLib\TcpListener.h">
+    <ClInclude Include="AsyncStream.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\ChatLib\TcpStream.h">
+    <ClInclude Include="AsyncListener.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\ChatLib\Thread.h">
-      <Filter>Thread</Filter>
+    <ClInclude Include="Listener.h">
+      <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\ChatLib\WriteLockGuard.h">
-      <Filter>ReadWriteLock</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ChatLib\Types.h">
-      <Filter>Main</Filter>
+    <ClInclude Include="Stream.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,62 +86,77 @@
     <ClCompile Include="pch.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\CorePch.cpp">
-      <Filter>Main</Filter>
+    <ClCompile Include="BaseAllocator.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\Global.cpp">
-      <Filter>Main</Filter>
+    <ClCompile Include="CorePch.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\BaseAllocator.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="FixedSizeMemory.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\FixedSizeMemory.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="Global.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\Memory.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="Iocp.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\MemoryHeader.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="Memory.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\MemoryPool.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="MemoryHeader.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\MultiSizeMemory.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="MemoryPool.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\ObjectPool.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="MultiSizeMemory.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\PoolAllocator.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="ObjectPool.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\ReadLockGuard.cpp">
-      <Filter>ReadWriteLock</Filter>
+    <ClCompile Include="PoolAllocator.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\ReadWriteLock.cpp">
-      <Filter>ReadWriteLock</Filter>
+    <ClCompile Include="ReadLockGuard.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\StlAllocator.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="ReadWriteLock.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\StompAllocator.cpp">
-      <Filter>Memory</Filter>
+    <ClCompile Include="StlAllocator.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\Iocp.cpp">
+    <ClCompile Include="StompAllocator.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpListener.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpStream.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="WriteLockGuard.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="OverlappedEx.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\TcpListener.cpp">
+    <ClCompile Include="AsyncStream.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\TcpStream.cpp">
+    <ClCompile Include="AsyncListener.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\Thread.cpp">
-      <Filter>Thread</Filter>
+    <ClCompile Include="Listener.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\ChatLib\WriteLockGuard.cpp">
-      <Filter>ReadWriteLock</Filter>
+    <ClCompile Include="Stream.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
