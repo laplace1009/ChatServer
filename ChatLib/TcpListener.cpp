@@ -1,123 +1,83 @@
 #include "pch.h"
 #include "TcpListener.h"
+#include "OverlappedEx.h"
 
-auto TcpListener::Init() -> bool
+bool TcpListener::BindAny(uint16 port)
 {
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	return mListener.BindAny(port);
+}
+
+bool TcpListener::Bind(std::string addr, uint16 port)
+{
+	return mListener.Bind(addr, port);
+}
+
+bool TcpListener::Accept()
+{
+	TcpStream* client = xnew<TcpStream>();
+	int addrLen = sizeof(SOCKADDR_IN);
+	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
+}
+
+bool TcpListener::Recv()
+{
+	return mListener.Recv();
+}
+
+bool TcpListener::Send(std::wstring msg, DWORD msgLen)
+{
+	if (SetSendMessage(msg, msgLen) == false)
 		return false;
 
-	return mStream.Init();
+	return mListener.Send();
 }
 
-auto TcpListener::BindAny(uint16 port) -> void
+bool TcpListener::SetSendMessage(std::wstring msg, DWORD msgSize)
 {
-	mStream.GetAddrPtr()->sin_family = AF_INET;
-	mStream.GetAddrPtr()->sin_addr.s_addr = htonl(INADDR_ANY);
-	mStream.GetAddrPtr()->sin_port = htons(port);
-	if (SOCKET_ERROR == bind(mStream.GetSocket(), reinterpret_cast<SOCKADDR*>(mStream.GetAddrPtr()), sizeof(SOCKADDR_IN)))
-		return;
-
-	if (SOCKET_ERROR == listen(mStream.GetSocket(), SOMAXCONN))
-		return;
+	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
 }
 
-auto TcpListener::Bind(std::string addr, uint16 port) -> void
+const SOCKET TcpListener::ConstGetSocket() const
 {
-	mStream.GetAddrPtr()->sin_family = AF_INET;
-	mStream.GetAddrPtr()->sin_port = htons(port);
-	int error = inet_pton(AF_INET, addr.c_str(), mStream.GetAddrPtr());
-	// wrong string address
-	if (0 == error)
-	{
-		return;
-	}
-	// internal error
-	if (-1 == error)
-	{
-		return;
-	}
-	if (SOCKET_ERROR == bind(mStream.GetSocket(), reinterpret_cast<SOCKADDR*>(mStream.GetAddrPtr()), sizeof(SOCKADDR_IN)))
-		return;
-	if (SOCKET_ERROR == listen(mStream.GetSocket(), SOMAXCONN))
-		return;
+	return mListener.ConstGetSocket();
 }
 
-auto TcpListener::Accept() -> TcpStream
+void TcpListener::SetSocket(SOCKET socket)
 {
-	TcpStream client;
-	int addrLen = sizeof(client.GetSocketInfoPtr()->addr);
-	client.SetSocket(accept(mStream.GetSocket(), reinterpret_cast<SOCKADDR*>(client.GetAddrPtr()), &addrLen));
-
-	return client;
+	mListener.SetSocket(socket);
 }
 
-auto TcpListener::Recv(OUT TcpStream& client) -> int
+SOCKADDR_IN& TcpListener::GetAddrRef()
 {
-	return recv(client.GetSocket(), reinterpret_cast<char*>(client.GetBuffer()->buf), sizeof(SOCKADDR_IN), 0);
+	return mListener.GetAddrRef();
 }
 
-auto TcpListener::Send(TcpStream& client) -> int
+WSABUF& TcpListener::GetRecvBufRef()
 {
-	return mStream.Send(client);
+	return mListener.GetRecvBufRef();
 }
 
-auto TcpListener::SwitchSyncAsync(u_long swt) -> int
+const DWORD TcpListener::GetRecvBytes() const
 {
-	return ioctlsocket(mStream.GetSocket(), FIONBIO, &swt);
+	return mListener.ConstGetRecvBytes();
 }
 
-auto TcpListener::GetStreamPtr() -> TcpStream*
+//void TcpListener::SetRecvBytes(DWORD bytes)
+//{
+//	mStream.get
+//}
+
+WSABUF& TcpListener::GetSendBufRef()
 {
-	return &mStream;
+	return mListener.GetSendBufRef();
 }
 
-auto TcpListener::GetSocket() const -> const SOCKET
+const DWORD TcpListener::GetSendBytes() const
 {
-	return mStream.GetSocket();
+	return mListener.ConstGetSendBytes();
 }
 
-auto TcpListener::GetSocket() -> SOCKET
-{
-	return mStream.GetSocket();
-}
+//void TcpListener::SetSendBytes(DWORD bytes)
+//{
+//}
 
-auto TcpListener::SetSocket(SOCKET socket) -> void
-{
-	mStream.SetSocket(socket);
-}
-
-auto TcpListener::GetAddrPtr() -> SOCKADDR_IN*
-{
-	return mStream.GetAddrPtr();
-}
-
-auto TcpListener::GetBuffer() -> WSABUF*
-{
-	return mStream.GetBuffer();
-}
-
-auto TcpListener::GetRecvBytes() const -> const DWORD
-{
-	return mStream.GetRecvBytes();
-}
-
-auto TcpListener::SetRecvBytes(DWORD size) -> void
-{
-	mStream.SetRecvBtyes(size);
-}
-
-auto TcpListener::GetSendBytes() const -> const DWORD
-{
-	return mStream.GetSendBytes();
-}
-
-auto TcpListener::SetSendBytes(DWORD size) -> void
-{
-	mStream.SetSendBytes(size);
-}
-
-auto TcpListener::GetOverlappedPtr() -> LPOVERLAPPED
-{
-	return mStream.GetOverlappedPtr();
-}

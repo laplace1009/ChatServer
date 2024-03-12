@@ -1,32 +1,30 @@
 #pragma once
 #include <string_view>
 #include "TcpStream.h"
+#include "Listener.h"
 
-class TcpListener
+class TcpListener : public Listener
 {
 public:
-	auto Init() -> bool;
-	auto BindAny(uint16 port) -> void;
-	auto Bind(std::string addr, uint16 port) -> void;
-	auto Accept() -> TcpStream;
-	auto Recv(OUT TcpStream& client) -> int;
-	auto Send(TcpStream& client) -> int;
-	auto SwitchSyncAsync(u_long swt) -> int;
-	auto GetStreamPtr() -> TcpStream*;
+	bool BindAny(uint16 port)								override;
+	bool Bind(std::string addr, uint16 port)				override;
+	bool Accept()											override;
+	bool Recv()												override;
+	bool Send(std::wstring msg, DWORD msgLen)				override;
+	bool SetSendMessage(std::wstring msg, DWORD msgSize)	override;
 
 public:
-	auto GetSocket() const -> const SOCKET;
-	auto GetSocket() -> SOCKET;
-	auto SetSocket(SOCKET socket) -> void;
-	auto GetAddrPtr() -> SOCKADDR_IN*;
-	auto GetBuffer() -> WSABUF*;
-	auto GetRecvBytes() const -> const DWORD;
-	auto SetRecvBytes(DWORD size) -> void;
-	auto GetSendBytes() const -> const DWORD;
-	auto SetSendBytes(DWORD size) -> void;
-	auto GetOverlappedPtr() -> LPOVERLAPPED;
+	const SOCKET	ConstGetSocket() const		override;
+	void			SetSocket(SOCKET socket)	override;
+	SOCKADDR_IN&	GetAddrRef()				override;
+	WSABUF&			GetRecvBufRef()				override;
+	const DWORD		GetRecvBytes() const		override;
+	//void			SetRecvBytes(DWORD bytes)	override;
+	WSABUF&			GetSendBufRef()				override;
+	const DWORD		GetSendBytes() const		override;
+	//void			SetSendBytes(DWORD bytes)	override;
 
 private:
-	TcpStream mStream;
+	TcpStream mListener;
 };
 
