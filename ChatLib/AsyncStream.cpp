@@ -172,7 +172,7 @@ auto AsyncStream::GetOverlappedPtr() -> OverlappedEx*
 	return mOverlapped;
 }
 
-auto AsyncStream::GetLPOveralppedPtr()-> OverlappedEx**
+auto AsyncStream::GetLPOverlappedPtr()-> OverlappedEx**
 {
 	return &mOverlapped;
 }
