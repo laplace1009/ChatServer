@@ -6,14 +6,24 @@ LPFN_DISCONNECTEX			AsyncStream::DisconnectEx = nullptr;
 LPFN_ACCEPTEX				AsyncStream::AcceptEx = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS	AsyncStream::GetAcceptExSockaddrs = nullptr;
 
-AsyncStream::AsyncStream() : mOverlapped{xnew<OverlappedEx>()}, mSocket{0}, mRecvBytes{0}, mSendBytes{0}
+AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{ 0 }, mRecvBytes { 0 }, mSendBytes{ 0 }
 {
 	ZeroMemory(&mAddr, sizeof(mAddr));
+	mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	mRecvBuf.len = MAX_BUFF_SIZE;
+	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	mSendBuf.len = MAX_BUFF_SIZE;
 }
 
 AsyncStream::~AsyncStream() noexcept
 {
 	xdelete(mOverlapped);
+	XRELEASE(mRecvBuf.buf);
+	mRecvBuf.buf = nullptr;
+	mRecvBuf.len = 0;
+	XRELEASE(mSendBuf.buf);
+	mSendBuf.buf = nullptr;
+	mSendBuf.len = 0;
 }
 
 auto AsyncStream::Init() -> bool
@@ -33,11 +43,9 @@ auto AsyncStream::Init() -> bool
 	return false;
 }
 
-bool AsyncStream::CreateSocket()
+int AsyncStream::CreateSocket()
 {
-	mSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-
-	return mSocket != INVALID_SOCKET;
+	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }
 
 bool AsyncStream::Bind()
@@ -57,7 +65,7 @@ bool AsyncStream::Recv()
 {
 	DWORD flags = 0;
 	mOverlapped->SetIOEVent(IOEvent::RECV);
-	if (WSARecv(mSocket, &mBuf, 1, NULL, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSARecv(mSocket, &mRecvBuf, 1, NULL, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
@@ -70,7 +78,7 @@ bool AsyncStream::Recv()
 bool AsyncStream::Send()
 {
 	mOverlapped->SetIOEVent(IOEvent::SEND);
-	if (WSASend(mSocket, &mBuf, 1, NULL, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSASend(mSocket, &mSendBuf, 1, NULL, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
@@ -81,10 +89,56 @@ bool AsyncStream::Send()
 	return false;
 }
 
-
-auto AsyncStream::GetSocket() -> SOCKET
+const SOCKET AsyncStream::ConstGetSocket() const
 {
 	return mSocket;
+}
+
+void AsyncStream::SetSocket(SOCKET socket)
+{
+	mSocket = socket;
+}
+
+const SOCKADDR_IN& AsyncStream::ConstGetAddrRef()
+{
+	return mAddr;
+}
+
+bool AsyncStream::SetAddr(std::string addr, uint16 port)
+{
+	mAddr.sin_family = AF_INET;
+	mAddr.sin_port = htons(port);
+	return inet_pton(AF_INET, addr.c_str(), &mAddr.sin_addr) == 1;
+}
+
+const WSABUF& AsyncStream::ConstGetRecvBufRef()
+{
+	return mRecvBuf;
+}
+
+WSABUF& AsyncStream::GetRecvBufRef()
+{
+	return mRecvBuf;
+}
+
+const DWORD AsyncStream::ConstGetRecvBytes()
+{
+	return mRecvBytes;
+}
+
+void AsyncStream::SetRecvBytes(DWORD bytes)
+{
+	mRecvBytes = bytes;
+}
+
+const DWORD AsyncStream::ConstGetSendBytes()
+{
+	return mSendBytes;
+}
+
+void AsyncStream::SetSendBytes(DWORD bytes)
+{
+	mSendBytes = bytes;
 }
 
 auto AsyncStream::GetOverlappedPtr() -> OverlappedEx*

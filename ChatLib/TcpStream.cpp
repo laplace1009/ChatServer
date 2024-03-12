@@ -1,202 +1,102 @@
 #include "pch.h"
 #include "TcpStream.h"
-#include "Memory.h"
 
-LPFN_CONNECTEX				TcpStream::LpFnConnectEx	= nullptr;
-LPFN_DISCONNECTEX			TcpStream::LpFnDisconnectEx	= nullptr;
-LPFN_ACCEPTEX				TcpStream::LpFnAcceptEx		= nullptr;
-LPFN_GETACCEPTEXSOCKADDRS	TcpStream::LpFnGetAcceptExSockaddrs = nullptr;
-
-auto TcpStream::Send(TcpStream& stream) -> bool
+TcpStream::TcpStream() : mSocket{0}, mRecvBytes{0}, mSendBytes{0}
 {
-	stream.SetIOEvent(IOEvent::SEND);
-	if (WSASend(stream.GetSocket(), stream.GetBuffer(), 1, NULL, 0, stream.GetOverlappedPtr(), NULL) == SOCKET_ERROR)
-	{
-		int error = WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-			return false;
-	}
-
-	return true;
+	ZeroMemory(&mAddr, sizeof(mAddr));
+	mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	mRecvBuf.len = MAX_BUFF_SIZE;
+	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	mSendBuf.len = MAX_BUFF_SIZE;
 }
 
-auto TcpStream::Recv(TcpStream& stream) -> bool
+TcpStream::~TcpStream()
 {
-	DWORD flags = 0;
-	stream.SetIOEvent(IOEvent::RECV);
-	if (WSARecv(stream.GetSocket(), stream.GetBuffer(), 1, NULL, OUT & flags, stream.GetOverlappedPtr(), NULL) == SOCKET_ERROR)
-	{
-		int error = WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-			return false;
-	}
-
-	return true;
+	XRELEASE(mRecvBuf.buf);
+	mRecvBuf.buf = nullptr;
+	mRecvBuf.len = 0;
+	XRELEASE(mSendBuf.buf);
+	mSendBuf.buf = nullptr;
+	mSendBuf.len = 0;
 }
 
-auto TcpStream::Init() -> bool
+auto TcpStream::CreateSocket() -> int
 {
-	mSocket.buf.buf = static_cast<char*>(PoolAllocator::Allocate(MAX_BUFF_SIZE + 1));
-	mSocket.buf.len = 0;
-	ZeroMemory(&mSocket.overlapped.wSaOverlapped, sizeof(WSAOVERLAPPED));
-	ZeroMemory(&mSocket.addr, sizeof(SOCKADDR_IN));
-	mSocket.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-	mSocket.overlapped.event = IOEvent::ACCEPT;
-	
-	if (mSocket.socket == INVALID_SOCKET)
-	{
-		PoolAllocator::Release(mSocket.buf.buf);
-		return false;
-	}
-
-	if (bindWsaIoctl(WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&LpFnConnectEx)) == false)
-		return false;
-
-	if (bindWsaIoctl(WSAID_DISCONNECTEX, reinterpret_cast<LPVOID*>(&LpFnDisconnectEx)) == false)
-		return false;
-
-	if (bindWsaIoctl(WSAID_ACCEPTEX, reinterpret_cast<LPVOID*>(&LpFnAcceptEx)) == false)
-		return false;
-
-	if (bindWsaIoctl(WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<LPVOID*>(&LpFnGetAcceptExSockaddrs)) == false)
-	{
-		std::cout << WSAGetLastError() << std::endl;
-		return false;
-	}
-		
-
-	return true;
+	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
 }
 
-auto TcpStream::Close() -> void
-{
-	closesocket(mSocket.socket);
-}
-
-auto TcpStream::SetAddr(std::string addr, uint16 port) -> bool
-{
-	mSocket.addr.sin_family = AF_INET;
-	mSocket.addr.sin_port = htons(port);
-	if (inet_pton(AF_INET, addr.c_str(), &mSocket.addr.sin_addr) == 1)
-		return true;
-
-	return false;
-}
 
 auto TcpStream::Bind() -> bool
 {
-	mSocket.addr.sin_family = AF_INET;
-	mSocket.addr.sin_port = htons(0);
-	mSocket.addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	return bind(mSocket.socket, reinterpret_cast<PSOCKADDR>(&mSocket.addr), sizeof(SOCKADDR_IN)) == 0;
+	mAddr.sin_family = AF_INET;
+	mAddr.sin_port = htons(0);
+	mAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
 }
 
 auto TcpStream::Connect() -> bool
 {
-	return TcpStream::LpFnConnectEx(mSocket.socket, reinterpret_cast<PSOCKADDR>(&mSocket.addr), sizeof(SOCKADDR_IN), NULL, NULL, &mSocket.recvBytes, reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped));
+	return connect(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
 }
 
-auto TcpStream::Connect(std::string addr, uint16 port) -> bool
+bool TcpStream::Recv()
 {
-	mSocket.addr.sin_family = AF_INET;
-	inet_pton(AF_INET, addr.c_str(), &mSocket.addr.sin_addr);
-	mSocket.addr.sin_port = htons(port);
-	return TcpStream::LpFnConnectEx(mSocket.socket, reinterpret_cast<PSOCKADDR>(&mSocket.addr), sizeof(SOCKADDR_IN), NULL, NULL, &mSocket.recvBytes, reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped));
+	return recv(mSocket, mRecvBuf.buf, mRecvBuf.len, 0) != SOCKET_ERROR;
 }
 
-auto TcpStream::GetSocket() const -> const SOCKET
+bool TcpStream::Send()
 {
-	return mSocket.socket;
+	return send(mSocket, mSendBuf.buf, mSendBuf.len, 0) != SOCKET_ERROR;
 }
 
-auto TcpStream::GetSocket() -> SOCKET
+const SOCKET TcpStream::ConstGetSocket() const
 {
-	return mSocket.socket;
+	return mSocket;
 }
 
-auto TcpStream::SetSocket(SOCKET socket) -> void
+void TcpStream::SetSocket(SOCKET socket)
 {
-	mSocket.socket = socket;
+	mSocket = socket;
 }
 
-auto TcpStream::GetAddrPtr() -> SOCKADDR_IN*
+const SOCKADDR_IN& TcpStream::ConstGetAddrRef()
 {
-	return &mSocket.addr;
+	return mAddr;
 }
 
-auto TcpStream::GetBuffer()-> WSABUF*
+bool TcpStream::SetAddr(std::string addr, uint16 port)
 {
-	return &mSocket.buf;
+	mAddr.sin_family = AF_INET;
+	mAddr.sin_port = htons(port);
+	return inet_pton(AF_INET, addr.c_str(), &mAddr.sin_addr) == 1;
 }
 
-auto TcpStream::GetRecvBytes() const -> const DWORD
+const WSABUF& TcpStream::ConstGetRecvBufRef()
 {
-	return mSocket.recvBytes;
+	return mRecvBuf;
 }
 
-auto TcpStream::SetRecvBtyes(DWORD size) -> void
+WSABUF& TcpStream::GetRecvBufRef()
 {
-	mSocket.recvBytes = size;
+	return mRecvBuf;
 }
 
-auto TcpStream::GetSendBytes() const -> const DWORD
+const DWORD TcpStream::ConstGetRecvBytes()
 {
-	return mSocket.sendBytes;
+	return mRecvBytes;
 }
 
-auto TcpStream::GetSendBytes() -> DWORD
+void TcpStream::SetRecvBytes(DWORD size)
 {
-	return mSocket.sendBytes;
+	mRecvBytes = size;
 }
 
-auto TcpStream::SetSendBytes(DWORD size) -> void
+const DWORD TcpStream::ConstGetSendBytes()
 {
-	mSocket.sendBytes = size;
+	return mSendBytes;
 }
 
-auto TcpStream::GetOverlappedPtr() -> LPOVERLAPPED
+void TcpStream::SetSendBytes(DWORD bytes)
 {
-	return reinterpret_cast<LPOVERLAPPED>(&mSocket.overlapped);
-}
-
-auto TcpStream::GetIOEvent() const -> const IOEvent
-{
-	return mSocket.overlapped.event;
-}
-
-auto TcpStream::GetIOEvent() -> IOEvent
-{
-	return mSocket.overlapped.event;
-}
-
-auto TcpStream::SetIOEvent(IOEvent event) -> void
-{
-	mSocket.overlapped.event = event;
-}
-
-auto TcpStream::SetSocketOpt(int option) -> bool
-{
-	int optLen = sizeof(option);
-	return setsockopt(mSocket.socket, SOL_SOCKET, option, nullptr, 0) == SOCKET_ERROR;
-}
-
-auto TcpStream::GetSocketInfoPtr() -> SocketInfo*
-{
-	return &mSocket;
-}
-
-auto TcpStream::GetSocketInfoPtr() const -> const SocketInfo*
-{
-	return &mSocket;
-}
-
-auto TcpStream::GetMaxBuffSize() -> uint32
-{
-	return MAX_BUFF_SIZE;
-}
-
-auto TcpStream::bindWsaIoctl(GUID guid, LPVOID* fn) -> bool
-{
-	DWORD bytes = 0;
-	return SOCKET_ERROR != WSAIoctl(mSocket.socket, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid), fn, sizeof(*fn), OUT & bytes, NULL, NULL);
+	mSendBytes = bytes;
 }

@@ -1,85 +1,42 @@
 #pragma once
 #include "Types.h"
+#include "Stream.h"
 #include <string>
-#include <optional>
-#include <variant>
 #include <WinSock2.h>
 
-enum class IOEvent
+class alignas(16) TcpStream: public Stream
 {
-	ACCEPT,
-	RECV,
-	SEND,
-	DISCONNECT,
-};
-
-struct OVERLAPPEDEX
-{
-	WSAOVERLAPPED wSaOverlapped;
-	IOEvent event;
-};
-
-
-class TcpStream
-{
-	enum
-	{
-		MAX_BUFF_SIZE = 2048,
-	};
-
-	struct alignas(16) SocketInfo
-	{
-		OVERLAPPEDEX overlapped;
-		SOCKET socket;
-		SOCKADDR_IN addr;
-		WSABUF buf;
-		DWORD recvBytes;
-		DWORD sendBytes;
-	};
+public:
+	TcpStream();
+	virtual ~TcpStream() noexcept;
 
 public:
-	static LPFN_CONNECTEX		LpFnConnectEx;
-	static LPFN_DISCONNECTEX	LpFnDisconnectEx;
-	static LPFN_ACCEPTEX		LpFnAcceptEx;
-	static LPFN_GETACCEPTEXSOCKADDRS LpFnGetAcceptExSockaddrs;
-
-public:
-	static auto Send(TcpStream& stream) -> bool;
-	static auto Recv(TcpStream& stream) -> bool;
-
-public:
-	auto Init() -> bool;
-	auto Close() -> void;
+	static auto CreateSocket() -> int;
 	
-	auto Bind() -> bool;
-	auto Connect() -> bool;
-	auto Connect(std::string addr, uint16 port) -> bool;
+public:
+	bool Bind()		override;
+	bool Connect()	override;
+	bool Recv()		override;
+	bool Send()		override;
 
 public:
-	auto GetSocket() const -> const SOCKET;
-	auto GetSocket() -> SOCKET;
-	auto SetSocket(SOCKET socket) -> void;
-	auto GetAddrPtr() -> SOCKADDR_IN*;
-	auto SetAddr(std::string addr, uint16 port) -> bool;
-	auto GetBuffer() -> WSABUF*;
-	auto GetRecvBytes() const -> const DWORD;
-	auto SetRecvBtyes(DWORD size) -> void;
-	auto GetSendBytes() const -> const DWORD;
-	auto GetSendBytes() -> DWORD;
-	auto SetSendBytes(DWORD size) -> void;
-	auto GetOverlappedPtr() -> LPOVERLAPPED;
-	auto GetIOEvent() const -> const IOEvent;
-	auto GetIOEvent() -> IOEvent;
-	auto SetIOEvent(IOEvent event) -> void;
-	auto SetSocketOpt(int option) -> bool;
-	auto GetSocketInfoPtr() -> SocketInfo*;
-	auto GetSocketInfoPtr() const -> const SocketInfo*;
-	auto GetMaxBuffSize() -> uint32;
+	const	SOCKET ConstGetSocket() const			override;
+	void	SetSocket(SOCKET socket)				override;
+	const	SOCKADDR_IN& ConstGetAddrRef()			override;
+	bool	SetAddr(std::string addr, uint16 port)	override;
+	const	WSABUF& ConstGetRecvBufRef()			override;
+	WSABUF& GetRecvBufRef()							override;
+	const	DWORD ConstGetRecvBytes()				override;
+	void	SetRecvBytes(DWORD size)				override;
+	const	DWORD ConstGetSendBytes()				override;
+	void	SetSendBytes(DWORD bytes)				override;
 
 private:
-	auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;
-
-private:
-	SocketInfo mSocket;
+	SOCKET		mSocket;
+	SOCKADDR_IN mAddr;
+	WSABUF		mRecvBuf;
+	WSABUF		mSendBuf;
+	DWORD		mRecvBytes;
+	DWORD		mSendBytes;
 };
 

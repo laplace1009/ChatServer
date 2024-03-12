@@ -14,20 +14,31 @@ public:
 
 public:
 	AsyncStream();
-	~AsyncStream() noexcept;
+	virtual ~AsyncStream() noexcept;
 
 public:
 	static auto Init()			->	bool;
-	static auto CreateSocket()	->	bool;
+	static auto CreateSocket()	->	int;
 
 public:
-	bool Bind()			override;
-	bool Connect()		override;
-	bool Recv()			override;
-	bool Send()			override;
+	bool Bind()		override;
+	bool Connect()	override;
+	bool Recv()		override;
+	bool Send()		override;
 
 public:
-	auto GetSocket()		->	SOCKET;
+	const	SOCKET ConstGetSocket() const			override;
+	void	SetSocket(SOCKET socket)				override;
+	const	SOCKADDR_IN& ConstGetAddrRef()			override;
+	bool	SetAddr(std::string addr, uint16 port)	override;
+	const	WSABUF& ConstGetRecvBufRef()			override;
+	WSABUF& GetRecvBufRef()							override;
+	const	DWORD ConstGetRecvBytes()				override;
+	void	SetRecvBytes(DWORD bytes)				override;
+	const	DWORD ConstGetSendBytes()				override;
+	void	SetSendBytes(DWORD bytes)				override;
+
+public:
 	auto GetOverlappedPtr() ->	OverlappedEx*;
 
 private:
@@ -37,7 +48,8 @@ private:
 	OverlappedEx*	mOverlapped;
 	SOCKET			mSocket;
 	SOCKADDR_IN		mAddr;
-	WSABUF			mBuf;
+	WSABUF			mRecvBuf;
+	WSABUF			mSendBuf;
 	DWORD			mRecvBytes;
 	DWORD			mSendBytes;
 };
