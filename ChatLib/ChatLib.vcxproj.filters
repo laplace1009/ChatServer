@@ -38,28 +38,6 @@
     <ClInclude Include="pch.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="BaseAllocator.h" />
-    <ClInclude Include="Container.h" />
-    <ClInclude Include="CorePch.h" />
-    <ClInclude Include="FixedSizeMemory.h" />
-    <ClInclude Include="Global.h" />
-    <ClInclude Include="Iocp.h" />
-    <ClInclude Include="Macro.h" />
-    <ClInclude Include="Memory.h" />
-    <ClInclude Include="MemoryHeader.h" />
-    <ClInclude Include="MemoryPool.h" />
-    <ClInclude Include="MultiSizeMemory.h" />
-    <ClInclude Include="ObjectPool.h" />
-    <ClInclude Include="PoolAllocator.h" />
-    <ClInclude Include="ReadLockGuard.h" />
-    <ClInclude Include="ReadWriteLock.h" />
-    <ClInclude Include="StlAllocator.h" />
-    <ClInclude Include="StompAllocator.h" />
-    <ClInclude Include="TcpListener.h" />
-    <ClInclude Include="TcpStream.h" />
-    <ClInclude Include="Thread.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="WriteLockGuard.h" />
     <ClInclude Include="OverlappedEx.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -75,6 +53,72 @@
     <ClInclude Include="Stream.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="BaseAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="FixedSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryHeader.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiSizeMemory.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="PoolAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="StlAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="StompAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadWriteLock.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="WriteLockGuard.h">
+      <Filter>ReadWriteLock</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="CorePch.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpStream.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="TcpListener.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Iocp.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Macro.h">
+      <Filter>Macro</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChatLib.cpp">
@@ -85,63 +129,6 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Main</Filter>
-    </ClCompile>
-    <ClCompile Include="BaseAllocator.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="CorePch.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="FixedSizeMemory.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Global.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Iocp.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Memory.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryHeader.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryPool.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="MultiSizeMemory.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ObjectPool.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PoolAllocator.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ReadLockGuard.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="ReadWriteLock.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="StlAllocator.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="StompAllocator.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpListener.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpStream.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Thread.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="WriteLockGuard.cpp">
-      <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="OverlappedEx.cpp">
       <Filter>Network</Filter>
@@ -156,6 +143,63 @@
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Stream.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryHeader.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MultiSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="PoolAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="StlAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="StompAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="FixedSizeMemory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="WriteLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadWriteLock.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadLockGuard.cpp">
+      <Filter>ReadWriteLock</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="CorePch.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpStream.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="TcpListener.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Iocp.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

@@ -18,28 +18,33 @@ public:
 
 public:
 	static auto Init()			->	bool;
-	static auto CreateSocket()	->	int;
+	static auto CreateSocket()	->	SOCKET;
 
 public:
-	bool Bind()		override;
-	bool Connect()	override;
-	bool Recv()		override;
-	bool Send()		override;
+	bool BindAny(uint16 port)						override;
+	bool Bind(std::string addr, uint16 port)		override;
+	bool Connect()									override;
+	bool Recv()										override;
+	bool Send()										override;
 
 public:
 	const	SOCKET ConstGetSocket() const			override;
 	void	SetSocket(SOCKET socket)				override;
-	const	SOCKADDR_IN& ConstGetAddrRef()			override;
+	const	SOCKADDR_IN& ConstGetAddrRef() const	override;
+	SOCKADDR_IN& GetAddrRef()						override;
 	bool	SetAddr(std::string addr, uint16 port)	override;
-	const	WSABUF& ConstGetRecvBufRef()			override;
+	const	WSABUF& ConstGetRecvBufRef() const		override;
 	WSABUF& GetRecvBufRef()							override;
-	const	DWORD ConstGetRecvBytes()				override;
+	const	DWORD ConstGetRecvBytes() const			override;
 	void	SetRecvBytes(DWORD bytes)				override;
-	const	DWORD ConstGetSendBytes()				override;
+	const	WSABUF& ConstGetSendBufRef() const		override;
+	WSABUF& GetSendBufRef()							override;
+	const	DWORD ConstGetSendBytes() const			override;
 	void	SetSendBytes(DWORD bytes)				override;
 
 public:
 	auto GetOverlappedPtr() ->	OverlappedEx*;
+	auto GetLPOveralppedPtr() -> OverlappedEx**;
 
 private:
 	static auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;

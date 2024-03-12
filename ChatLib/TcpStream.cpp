@@ -25,12 +25,17 @@ auto TcpStream::CreateSocket() -> int
 	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
 }
 
-
-auto TcpStream::Bind() -> bool
+bool TcpStream::BindAny(uint16 port)
 {
 	mAddr.sin_family = AF_INET;
-	mAddr.sin_port = htons(0);
+	mAddr.sin_port = htons(port);
 	mAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
+}
+
+bool TcpStream::Bind(std::string addr, uint16 port)
+{
+	SetAddr(addr, port);
 	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
 }
 
@@ -59,7 +64,12 @@ void TcpStream::SetSocket(SOCKET socket)
 	mSocket = socket;
 }
 
-const SOCKADDR_IN& TcpStream::ConstGetAddrRef()
+const SOCKADDR_IN& TcpStream::ConstGetAddrRef() const
+{
+	return mAddr;
+}
+
+SOCKADDR_IN& TcpStream::GetAddrRef()
 {
 	return mAddr;
 }
@@ -71,7 +81,7 @@ bool TcpStream::SetAddr(std::string addr, uint16 port)
 	return inet_pton(AF_INET, addr.c_str(), &mAddr.sin_addr) == 1;
 }
 
-const WSABUF& TcpStream::ConstGetRecvBufRef()
+const WSABUF& TcpStream::ConstGetRecvBufRef() const
 {
 	return mRecvBuf;
 }
@@ -81,7 +91,7 @@ WSABUF& TcpStream::GetRecvBufRef()
 	return mRecvBuf;
 }
 
-const DWORD TcpStream::ConstGetRecvBytes()
+const DWORD TcpStream::ConstGetRecvBytes() const
 {
 	return mRecvBytes;
 }
@@ -91,7 +101,17 @@ void TcpStream::SetRecvBytes(DWORD size)
 	mRecvBytes = size;
 }
 
-const DWORD TcpStream::ConstGetSendBytes()
+const WSABUF& TcpStream::ConstGetSendBufRef() const
+{
+	return mSendBuf;
+}
+
+WSABUF& TcpStream::GetSendBufRef()
+{
+	return mSendBuf;
+}
+
+const DWORD TcpStream::ConstGetSendBytes() const
 {
 	return mSendBytes;
 }
