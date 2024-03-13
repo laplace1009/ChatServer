@@ -4,11 +4,15 @@
 AsyncListener::AsyncListener()
 {
 	ASSERT_CRASH(AsyncStream::Init());
-	ASSERT_CRASH(mIocp.Init());
 }
 
 AsyncListener::~AsyncListener()
 {
+	for (auto client : mClients)
+	{
+		delete client;
+	}
+	mClients.clear();
 }
 
 bool AsyncListener::BindAny(uint16 port)
@@ -89,12 +93,16 @@ const DWORD AsyncListener::GetSendBytes() const
 	return mListener.ConstGetSendBytes();
 }
 
+auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
+{
+	return mListener;
+}
+
 auto AsyncListener::AcceptRegister(AsyncStream* client) -> void
 {
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
-	char buf[1024]{ 0 };
-	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), buf, 0, addrLen, addrLen, OUT &recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->mBuf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)

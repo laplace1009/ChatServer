@@ -30,11 +30,13 @@ public:
 	//void			SetSendBytes(DWORD bytes)	override;
 
 public:
+	auto GetAsyncStreamRef() -> AsyncStream&;
+
+public:
 	auto AcceptRegister(AsyncStream* cilent) -> void;
 
 private:
 	AsyncStream mListener;
-	Iocp mIocp;
 	std::vector<AsyncStream*> mClients;
 };
 

@@ -9,7 +9,9 @@ LPFN_GETACCEPTEXSOCKADDRS	AsyncStream::GetAcceptExSockaddrs = nullptr;
 AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{ 0 }, mRecvBytes { 0 }, mSendBytes{ 0 }
 {
 	ZeroMemory(&mAddr, sizeof(mAddr));
-	mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	//mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	mRecvBuf.buf = new char[MAX_BUFF_SIZE];
+	ZeroMemory(mRecvBuf.buf, MAX_BUFF_SIZE);
 	mRecvBuf.len = MAX_BUFF_SIZE;
 	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
 	mSendBuf.len = MAX_BUFF_SIZE;
@@ -18,7 +20,8 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{ 0 }, 
 AsyncStream::~AsyncStream() noexcept
 {
 	xdelete(mOverlapped);
-	XRELEASE(mRecvBuf.buf);
+	//XRELEASE(mRecvBuf.buf);
+	delete[] mRecvBuf.buf;
 	mRecvBuf.buf = nullptr;
 	mRecvBuf.len = 0;
 	XRELEASE(mSendBuf.buf);
@@ -97,7 +100,6 @@ bool AsyncStream::Send()
 	}
 
 	return true;
-	return false;
 }
 
 const SOCKET AsyncStream::ConstGetSocket() const

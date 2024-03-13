@@ -15,6 +15,7 @@ public:
 public:
 	AsyncStream();
 	virtual ~AsyncStream() noexcept;
+	char			mBuf[1024];
 
 public:
 	static auto Init()			->	bool;
