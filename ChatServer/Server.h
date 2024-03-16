@@ -1,15 +1,15 @@
 #pragma once
 #include "Types.h"
-#include "TcpStream.h"
-#include "TcpListener.h"
 #include "Iocp.h"
 #include "ReadWriteLock.h"
 #include "ReadLockGuard.h"
 #include "WriteLockGuard.h"
+#include "AsyncStream.h"
+#include "AsyncListener.h"
 #include <vector>
 #include <string>
 
-class Server
+class Server : public IOCP
 {
 	enum
 	{
@@ -17,22 +17,27 @@ class Server
 	};
 
 public:
-	auto Start(uint16 port) -> bool;
-	auto Start(std::string addr, uint16 port) -> bool;
-	auto Close() -> bool;
-	
-	auto IOAction() -> bool;
-	auto Accept() -> void;
-	auto Join(TcpStream&& stream) -> bool;
+	Server();
+	~Server() noexcept;
+
+public:
+	NODISCARD bool Register(AsyncStream* stream) override;
+	NODISCARD bool Dispatch() override;
+
+public:
+	NODISCARD auto Run(uint16) -> bool;
+	NODISCARD auto Run(std::string addr, uint16 port) -> bool;
+
+public:
+	auto GetHandle() -> HANDLE;
 
 private:
-	auto init(uint16 port) -> bool;
-	auto init(std::string addr, uint16 port) -> bool;
+	auto accept() -> void;
+	auto acceptRegister(AsyncStream* client) -> void;
 
 private:
-	ReadWriteLock mLock;
-	TcpListener mSocket;
-	Iocp mIocp;
-	std::vector<TcpStream> mClients;
+	AsyncListener mListener;
+	HANDLE mHandle;
+	std::vector<AsyncStream*> mClients;
 };
 

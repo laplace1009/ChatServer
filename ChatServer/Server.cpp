@@ -1,116 +1,143 @@
 #include "pch.h"
 #include "Server.h"
-#include <iostream>
-#include <thread>
 
-auto Server::Start(uint16 port) -> bool
+Server::Server()
 {
-	if (mSocket.Init() == false)
-		return false;
-
-	if (init(port) == false)
-		return false;
-
-	if (mIocp.Init() == false)
-		return false;
-
-	return true;
+	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	ASSERT_CRASH(mHandle != NULL);
 }
 
-auto Server::Start(std::string addr, uint16 port) -> bool
+Server::~Server() noexcept
 {
-	// Error 따로 정의 해서 내보내기
-	if (mSocket.Init() == false)
-		return false;
-
-	if (init(addr, port) == false)
-		return false;
-
-	if (mIocp.Init() == NULL)
-		return false;
-
-	return true;
-}
-
-auto Server::Close() -> bool
-{
-	WSACleanup();
-	return false;
-}
-
-auto Server::IOAction() -> bool
-{
-	DWORD transferredBytes;
-	OVERLAPPEDEX* overlapped{ new OVERLAPPEDEX() };
-	TcpStream client;
-	client.Init();
-	bool ret = GetQueuedCompletionStatus(mIocp.GetHandle(), &transferredBytes, reinterpret_cast<PULONG_PTR>(this), reinterpret_cast<LPOVERLAPPED*>(&overlapped), 10000);
-	if (ret)
+	for (auto client : mClients)
 	{
-		if (overlapped->event == IOEvent::ACCEPT)
+		xdelete<AsyncStream>(client);
+	}
+	mClients.clear();
+}
+
+bool Server::Register(AsyncStream* stream)
+{
+	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream->ConstGetSocket()), mHandle, 0, 0))
+		return false;
+		
+	return true;
+}
+
+bool Server::Dispatch()
+{
+	ULONG_PTR key;
+	DWORD transferred = 0;
+	OverlappedEx* retOver = nullptr;
+	SOCKADDR_IN* localAddr = nullptr;
+	SOCKADDR_IN* remoteAddr = nullptr;
+	int localAddrLen = 0, remoteAddrLen = 0;
+	//char remoteAddrStr[INET_ADDRSTRLEN];
+	AsyncStream* client = nullptr;
+	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), INFINITE))
+	{
+		client = retOver->GetOwner();
+		//std::cout << client << std::endl;
+		//AsyncStream::GetAcceptExSockaddrs(client->GetRecvBufRef().buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, (SOCKADDR**)&localAddr, &localAddrLen, (SOCKADDR**)&remoteAddr, &remoteAddrLen);
+		//inet_ntop(AF_INET, &remoteAddr->sin_addr, remoteAddrStr, sizeof(remoteAddrStr));
+		//std::cout << "connect Addr: " << remoteAddrStr << std::endl;
+		//std::cout << "Listen sock: " << mListener.ConstGetSocket() << std::endl;
+	}
+	return true;
+}
+
+auto Server::Run(uint16 port) -> bool
+{
+	if (NULL == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListener.ConstGetSocket()), mHandle, (ULONG_PTR)mListener.ConstGetSocket(), 0))
+		return false;
+
+	if (false == mListener.BindAny(port))
+		return false;
+	
+	accept();
+
+	return true;
+}
+
+auto Server::Run(std::string addr, uint16 port) -> bool
+{
+	if (NULL == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListener.ConstGetSocket()), mHandle, (ULONG_PTR)mListener.ConstGetSocket(), 0))
+		return false;
+
+	if (false == mListener.Bind(addr, port))
+		return false;
+
+	accept();
+
+	return true;
+}
+
+auto Server::GetHandle() -> HANDLE
+{
+	return mHandle;
+}
+
+auto Server::accept() -> void
+{
+	const int32 acceptCount = 5;
+	for (int32 i = 0; i < acceptCount; ++i)
+	{
+		AsyncStream* client = xnew<AsyncStream>();
+		client->SetSocket(AsyncStream::CreateSocket());
+		mClients.emplace_back(client);
+		acceptRegister(client);
+	}
+}
+
+auto Server::acceptRegister(AsyncStream* client) -> void
+{
+	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
+	DWORD recvBytes{ 0 };
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
+	{
+		int error = WSAGetLastError();
+		if (error != WSA_IO_PENDING)
 		{
-			while (false == TcpStream::LpFnAcceptEx(mSocket.GetSocket(), client.GetSocket(), client.GetBuffer()->buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, nullptr, client.GetOverlappedPtr()));
-
-			{
-				WriteLockGuard<ReadWriteLock&> guard(mLock);
-				while (false == mIocp.Register(client));
-				mClients.emplace_back(std::move(client));
-			}
-
-			SOCKADDR_IN addr;
-			int addrLen = sizeof(SOCKADDR_IN);
-			char addrBuf[INET_ADDRSTRLEN];
-			getpeername(client.GetSocket(), reinterpret_cast<PSOCKADDR>(&addr), &addrLen);
-			inet_ntop(AF_INET, &addr, addrBuf, sizeof(addrBuf));
-			std::cout << "Client connec to Server, Ip: " << addrBuf << " Port: " << ntohs(addr.sin_port) << std::endl;
-		}
-		else if (overlapped->event == IOEvent::RECV)
-		{
-
-		}
-		else if (overlapped->event == IOEvent::SEND)
-		{
-
-		}
-		else if (overlapped->event == IOEvent::DISCONNECT)
-		{
-
+			acceptRegister(client);
 		}
 	}
-
-	return false;
 }
 
-auto Server::Accept() -> void
-{
-	int addrLen = sizeof(SOCKADDR_IN);
-	TcpStream client;
-	client.Init();
-
-	::Sleep(500);
-}
-
-auto Server::Join(TcpStream&& stream) -> bool
-{
-	if (mIocp.Register(stream))
-	{
-		mClients.emplace_back(stream);
-		return true;
-	}
-
-	return false;
-}
-
-auto Server::init(uint16 port) -> bool
-{	
-	mSocket.BindAny(port);
-
-	return true;
-}
-
-auto Server::init(std::string addr, uint16 port) -> bool
-{
-	mSocket.Bind(addr, port);
-
-	return true;
-}
+//Iocp::~Iocp() noexcept
+//{
+//	CloseHandle(mHandle);
+//}
+//
+//auto Iocp::Init() -> bool
+//{
+//	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+//	if (mHandle == NULL)
+//		return false;
+//
+//	return true;
+//}
+//
+//auto Iocp::GetHandle() -> HANDLE
+//{
+//	return mHandle;
+//}
+//
+//auto Iocp::SetHandle(HANDLE h) -> void
+//{
+//	mHandle = h;
+//}
+//
+//auto Iocp::Register(AsyncStream& stream) -> bool
+//{
+//	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream.ConstGetSocket()), mHandle, reinterpret_cast<ULONG_PTR>(&stream), 0))
+//		return false;
+//
+//	return true;
+//}
+//
+//auto Iocp::Dispatch(uint32 timeout) -> bool
+//{
+//
+//
+//	return true;
+//}
