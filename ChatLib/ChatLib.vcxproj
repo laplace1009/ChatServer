@@ -162,7 +162,7 @@
     <ClInclude Include="CorePch.h" />
     <ClInclude Include="FixedSizeMemory.h" />
     <ClInclude Include="Global.h" />
-    <ClInclude Include="Iocp.h" />
+    <ClInclude Include="IOCP.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="Macro.h" />
     <ClInclude Include="Memory.h" />
@@ -197,7 +197,7 @@
     </ClCompile>
     <ClCompile Include="FixedSizeMemory.cpp" />
     <ClCompile Include="Global.cpp" />
-    <ClCompile Include="Iocp.cpp" />
+    <ClCompile Include="IOCP.cpp" />
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Memory.cpp" />
     <ClCompile Include="MemoryHeader.cpp" />

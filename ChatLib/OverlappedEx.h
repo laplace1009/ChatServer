@@ -1,4 +1,7 @@
 #pragma once
+#include "AsyncStream.h"
+
+class AsyncStream;
 
 enum class IOEvent
 {
@@ -16,8 +19,10 @@ public:
 
 public:
 	auto SetIOEVent(IOEvent event) -> void;
+	auto GetOwner() -> AsyncStream*;
 	
 private:
 	IOEvent mEvent;
+	AsyncStream* owner;
 };
 

@@ -4,6 +4,17 @@
 // 참조나 포인터로 매개변수값 변경시 붙여주는 태그
 #define OUT
 
+// 기본적인 [[nodiscard]] 매크로
+#define NODISCARD [[nodiscard]]
+
+// 메시지를 포함하는 [[nodiscard]] 매크로
+#if __cplusplus >= 202002L  // C++20 이상인 경우에만 메시지 포함 버전 사용 가능
+#define NODISCARD_MSG(msg) [[nodiscard(msg)]]
+#else
+#define NODISCARD_MSG(msg) [[nodiscard]]
+#endif
+
+
 #define XALLOCATE(size)	PoolAllocator::Allocate(size)
 #define XRELEASE(ptr)	PoolAllocator::Release(ptr)
 

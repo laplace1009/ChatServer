@@ -110,14 +110,14 @@
     <ClInclude Include="TcpListener.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="Iocp.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="Macro.h">
       <Filter>Macro</Filter>
     </ClInclude>
     <ClInclude Include="Types.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="IOCP.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -199,7 +199,7 @@
     <ClCompile Include="Global.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="Iocp.cpp">
+    <ClCompile Include="IOCP.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

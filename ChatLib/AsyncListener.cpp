@@ -4,15 +4,8 @@
 AsyncListener::AsyncListener()
 {
 	ASSERT_CRASH(AsyncStream::Init());
-}
-
-AsyncListener::~AsyncListener()
-{
-	for (auto client : mClients)
-	{
-		delete client;
-	}
-	mClients.clear();
+	SetSocket(AsyncStream::CreateSocket());
+	ASSERT_CRASH(ConstGetSocket() != SOCKET_ERROR);
 }
 
 bool AsyncListener::BindAny(uint16 port)
@@ -30,16 +23,36 @@ bool AsyncListener::Bind(std::string addr, uint16 port)
 
 bool AsyncListener::Accept()
 {
-	const int32 acceptCount = 5;
-	for (int32 i = 0; i < acceptCount; ++i)
+	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
+	DWORD recvBytes{ 0 };
+	AsyncStream* client = xnew<AsyncStream>();
+	client->SetSocket(client->CreateSocket());
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
 	{
-		AsyncStream* client = xnew<AsyncStream>();
-		client->SetSocket(AsyncStream::CreateSocket());
-		mClients.emplace_back(client);
-		AcceptRegister(client);
+		int error = WSAGetLastError();
+		if (error != WSA_IO_PENDING)
+		{
+
+		}
+	}
+	return true;
+}
+
+bool AsyncListener::Accept(Stream* client)
+{
+	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
+	DWORD recvBytes{ 0 };
+	AsyncStream* newClient = static_cast<AsyncStream*>(client);
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), newClient->ConstGetSocket(), newClient->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(newClient->GetOverlappedPtr())))
+	{
+		int error = WSAGetLastError();
+		if (error != WSA_IO_PENDING)
+		{
+			
+		}
 	}
 
-	return false;
+	return true;
 }
 
 bool AsyncListener::Recv()
@@ -96,18 +109,4 @@ const DWORD AsyncListener::GetSendBytes() const
 auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
 {
 	return mListener;
-}
-
-auto AsyncListener::AcceptRegister(AsyncStream* client) -> void
-{
-	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
-	DWORD recvBytes{ 0 };
-	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->mBuf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
-	{
-		int error = WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-		{
-			AcceptRegister(client);
-		}
-	}
 }

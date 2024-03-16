@@ -19,6 +19,12 @@ bool TcpListener::Accept()
 	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
 }
 
+bool TcpListener::Accept(Stream* client)
+{
+	int addrLen = sizeof(SOCKADDR_IN);
+	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
+}
+
 bool TcpListener::Recv()
 {
 	return mListener.Recv();
