@@ -15,6 +15,7 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{0}, mR
 	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
 	ZeroMemory(mSendBuf.buf, MAX_BUFF_SIZE);
 	mSendBuf.len = MAX_BUFF_SIZE;
+	mOverlapped->SetOwner(this);
 }
 
 AsyncStream::~AsyncStream() noexcept
@@ -176,6 +177,11 @@ auto AsyncStream::GetOverlappedPtr() -> OverlappedEx*
 auto AsyncStream::GetLPOverlappedPtr()-> OverlappedEx**
 {
 	return &mOverlapped;
+}
+
+auto AsyncStream::GetIOEvent() -> IOEvent
+{
+	return mOverlapped->GetIOEvent();
 }
 
 auto AsyncStream::bindWsaIoctl(GUID guid, LPVOID* fn) -> bool

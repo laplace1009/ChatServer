@@ -29,20 +29,21 @@ bool Server::Dispatch()
 	ULONG_PTR key;
 	DWORD transferred = 0;
 	OverlappedEx* retOver = nullptr;
-	SOCKADDR_IN* localAddr = nullptr;
-	SOCKADDR_IN* remoteAddr = nullptr;
-	int localAddrLen = 0, remoteAddrLen = 0;
+	//SOCKADDR_IN* localAddr = nullptr;
+	//SOCKADDR_IN* remoteAddr = nullptr;
+	//int localAddrLen = 0, remoteAddrLen = 0;
 	//char remoteAddrStr[INET_ADDRSTRLEN];
 	AsyncStream* client = nullptr;
-	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), INFINITE))
+	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(client->GetLPOverlappedPtr()), INFINITE))
 	{
 		client = retOver->GetOwner();
-		//std::cout << client << std::endl;
+		
 		//AsyncStream::GetAcceptExSockaddrs(client->GetRecvBufRef().buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, (SOCKADDR**)&localAddr, &localAddrLen, (SOCKADDR**)&remoteAddr, &remoteAddrLen);
 		//inet_ntop(AF_INET, &remoteAddr->sin_addr, remoteAddrStr, sizeof(remoteAddrStr));
 		//std::cout << "connect Addr: " << remoteAddrStr << std::endl;
 		//std::cout << "Listen sock: " << mListener.ConstGetSocket() << std::endl;
 	}
+
 	return true;
 }
 

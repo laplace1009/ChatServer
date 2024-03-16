@@ -47,6 +47,7 @@ public:
 public:
 	auto GetOverlappedPtr() -> OverlappedEx*;
 	auto GetLPOverlappedPtr() -> OverlappedEx**;
+	auto GetIOEvent() -> IOEvent;
 
 private:
 	static auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;

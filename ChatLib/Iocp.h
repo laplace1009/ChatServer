@@ -1,9 +1,9 @@
 #pragma once
-#include "Stream.h"
+#include "AsyncStream.h"
 
 class IOCP
 {
-	virtual bool Register(Stream* stream) = 0;
+	virtual bool Register(AsyncStream* stream) = 0;
 	virtual bool Dispatch() = 0;
 };
 

@@ -19,10 +19,12 @@ public:
 
 public:
 	auto SetIOEVent(IOEvent event) -> void;
+	auto GetIOEvent() -> IOEvent;
 	auto GetOwner() -> AsyncStream*;
-	
+	auto SetOwner(AsyncStream* owner) -> void;
+
 private:
 	IOEvent mEvent;
-	AsyncStream* owner;
+	AsyncStream* mOwner;
 };
 
