@@ -6,22 +6,21 @@ LPFN_DISCONNECTEX			AsyncStream::DisconnectEx = nullptr;
 LPFN_ACCEPTEX				AsyncStream::AcceptEx = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS	AsyncStream::GetAcceptExSockaddrs = nullptr;
 
-AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{ 0 }, mRecvBytes { 0 }, mSendBytes{ 0 }
+AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{0}, mRecvBytes{0}, mSendBytes{0}
 {
 	ZeroMemory(&mAddr, sizeof(mAddr));
-	//mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
-	mRecvBuf.buf = new char[MAX_BUFF_SIZE];
+	mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
 	ZeroMemory(mRecvBuf.buf, MAX_BUFF_SIZE);
 	mRecvBuf.len = MAX_BUFF_SIZE;
 	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
+	ZeroMemory(mSendBuf.buf, MAX_BUFF_SIZE);
 	mSendBuf.len = MAX_BUFF_SIZE;
 }
 
 AsyncStream::~AsyncStream() noexcept
 {
 	xdelete(mOverlapped);
-	//XRELEASE(mRecvBuf.buf);
-	delete[] mRecvBuf.buf;
+	XRELEASE(mRecvBuf.buf);
 	mRecvBuf.buf = nullptr;
 	mRecvBuf.len = 0;
 	XRELEASE(mSendBuf.buf);

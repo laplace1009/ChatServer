@@ -4,6 +4,8 @@
 #include "OverlappedEx.h"
 #include "Memory.h"
 
+class OverlappedEx;
+
 class AsyncStream : public Stream
 {
 public:
@@ -14,8 +16,7 @@ public:
 
 public:
 	AsyncStream();
-	virtual ~AsyncStream() noexcept;
-	char			mBuf[1024];
+	~AsyncStream() noexcept override;
 
 public:
 	static auto Init()			->	bool;
@@ -44,7 +45,7 @@ public:
 	void	SetSendBytes(DWORD bytes)				override;
 
 public:
-	auto GetOverlappedPtr() ->	OverlappedEx*;
+	auto GetOverlappedPtr() -> OverlappedEx*;
 	auto GetLPOverlappedPtr() -> OverlappedEx**;
 
 private:

@@ -8,7 +8,7 @@ enum
 class Stream
 {
 public:
-	virtual ~Stream() {}
+	virtual ~Stream() = default;
 
 public:
 	virtual bool BindAny(uint16)						= 0;
