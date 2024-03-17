@@ -29,23 +29,57 @@ bool Server::Dispatch()
 	ULONG_PTR key;
 	DWORD transferred = 0;
 	OverlappedEx* retOver = nullptr;
-	//SOCKADDR_IN* localAddr = nullptr;
-	//SOCKADDR_IN* remoteAddr = nullptr;
-	//int localAddrLen = 0, remoteAddrLen = 0;
-	//char remoteAddrStr[INET_ADDRSTRLEN];
 	AsyncStream* client = nullptr;
-	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(client->GetLPOverlappedPtr()), INFINITE))
+	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), INFINITE))
 	{
 		client = retOver->GetOwner();
-		
-		//AsyncStream::GetAcceptExSockaddrs(client->GetRecvBufRef().buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, (SOCKADDR**)&localAddr, &localAddrLen, (SOCKADDR**)&remoteAddr, &remoteAddrLen);
-		//inet_ntop(AF_INET, &remoteAddr->sin_addr, remoteAddrStr, sizeof(remoteAddrStr));
-		//std::cout << "connect Addr: " << remoteAddrStr << std::endl;
-		//std::cout << "Listen sock: " << mListener.ConstGetSocket() << std::endl;
+		switch (client->GetIOEvent())
+		{
+		case IOEvent::ACCEPT:
+			IOAccept(client);
+			break;
+		case IOEvent::RECV:
+			IORecv(client);
+			break;
+		case IOEvent::SEND:
+			IOSend(client);
+			break;
+		case IOEvent::DISCONNECT:
+			IODisconnect(client);
+			break;
+		default:
+			break;
+		}
 	}
 
 	return true;
 }
+
+bool Server::IOAccept(AsyncStream* client)
+{
+	if (mListener.SocketAcceptUpdate(client) == false)
+	{
+		mListener.SocketAcceptUpdate(client);
+	}
+	
+	return true;
+}
+
+bool Server::IORecv(AsyncStream* client)
+{
+	return false;
+}
+
+bool Server::IOSend(AsyncStream* client)
+{
+	return false;
+}
+
+bool Server::IODisconnect(AsyncStream* client)
+{
+	return false;
+}
+
 
 auto Server::Run(uint16 port) -> bool
 {

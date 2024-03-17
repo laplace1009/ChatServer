@@ -5,6 +5,7 @@
 #include "Memory.h"
 
 class OverlappedEx;
+enum class IOEvent;
 
 class AsyncStream : public Stream
 {
@@ -45,9 +46,11 @@ public:
 	void	SetSendBytes(DWORD bytes)				override;
 
 public:
+	auto GetSocketPtr() -> SOCKET*;
 	auto GetOverlappedPtr() -> OverlappedEx*;
 	auto GetLPOverlappedPtr() -> OverlappedEx**;
 	auto GetIOEvent() -> IOEvent;
+	auto SocketConnectUpdate() -> bool;
 
 private:
 	static auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;

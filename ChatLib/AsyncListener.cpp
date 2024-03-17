@@ -35,6 +35,7 @@ bool AsyncListener::Accept()
 
 		}
 	}
+
 	return true;
 }
 
@@ -106,7 +107,17 @@ const DWORD AsyncListener::GetSendBytes() const
 	return mListener.ConstGetSendBytes();
 }
 
+auto AsyncListener::GetSocketPtr() -> SOCKET*
+{
+	return mListener.GetSocketPtr();
+}
+
 auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
 {
 	return mListener;
+}
+
+auto AsyncListener::SocketAcceptUpdate(AsyncStream* client) -> bool
+{
+	return SetSocketOpt<SOCKET>(client, SO_UPDATE_ACCEPT_CONTEXT, mListener.GetSocketPtr(), sizeof(mListener.ConstGetSocket()));
 }

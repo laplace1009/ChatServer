@@ -31,8 +31,9 @@ public:
 	//void			SetSendBytes(DWORD bytes)	override;
 
 public:
+	auto GetSocketPtr() -> SOCKET*;
 	auto GetAsyncStreamRef() -> AsyncStream&;
-
+	auto SocketAcceptUpdate(AsyncStream* client) -> bool;
 
 private:
 	AsyncStream mListener;

@@ -36,7 +36,7 @@ public:
 template<typename T>
 static inline auto SetSocketOpt(Stream* stream, int optName, T* optVal, size_t optLen) -> bool
 {
-	return ::setsockopt(stream->ConstGetSocket(), SOL_SOCKET, optName, reinterpret_cast<const char*>(optVal), sizeof(T)) != SOCKET_ERROR;
+	return ::setsockopt(stream->ConstGetSocket(), SOL_SOCKET, optName, reinterpret_cast<const char*>(optVal), optLen) != SOCKET_ERROR;
 }
 
 

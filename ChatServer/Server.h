@@ -23,6 +23,10 @@ public:
 public:
 	NODISCARD bool Register(AsyncStream* stream) override;
 	NODISCARD bool Dispatch() override;
+	bool IOAccept(AsyncStream* client) override;
+	bool IORecv(AsyncStream* client) override;
+	bool IOSend(AsyncStream* client) override;
+	bool IODisconnect(AsyncStream* client) override;
 
 public:
 	NODISCARD auto Run(uint16) -> bool;
