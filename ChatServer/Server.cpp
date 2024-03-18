@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Server.h"
 
+Atomic<uint32> Server::mId = 0;
+
 Server::Server()
 {
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -32,17 +34,17 @@ bool Server::Dispatch()
 	AsyncStream* client = nullptr;
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), INFINITE))
 	{
-		client = retOver->GetOwner();
+		client = reinterpret_cast<AsyncStream*>(retOver->GetOwner());
 		switch (client->GetIOEvent())
 		{
-		case IOEvent::ACCEPT:
-			IOAccept(client);
+		case IOEvent::CONNECT:
+			IOConnect(client);
 			break;
 		case IOEvent::RECV:
 			IORecv(client);
 			break;
 		case IOEvent::SEND:
-			IOSend(client);
+			//IOSend(client);
 			break;
 		case IOEvent::DISCONNECT:
 			IODisconnect(client);
@@ -54,32 +56,6 @@ bool Server::Dispatch()
 
 	return true;
 }
-
-bool Server::IOAccept(AsyncStream* client)
-{
-	if (mListener.SocketAcceptUpdate(client) == false)
-	{
-		mListener.SocketAcceptUpdate(client);
-	}
-	
-	return true;
-}
-
-bool Server::IORecv(AsyncStream* client)
-{
-	return false;
-}
-
-bool Server::IOSend(AsyncStream* client)
-{
-	return false;
-}
-
-bool Server::IODisconnect(AsyncStream* client)
-{
-	return false;
-}
-
 
 auto Server::Run(uint16 port) -> bool
 {
@@ -137,6 +113,38 @@ auto Server::acceptRegister(AsyncStream* client) -> void
 		}
 	}
 }
+
+auto Server::IOConnect(AsyncStream* client) -> void
+{
+	IOAccept(client);
+	mListener.GetAsyncStreamRef().GetOverlappedPtr()->SetIOEVent(IOEvent::ACCEPT);
+	IOSend(client, L"Hello, World");
+}
+
+auto Server::IOAccept(AsyncStream* client) -> void
+{
+	if (mListener.SocketAcceptUpdate(client) == false)
+	{
+		mListener.SocketAcceptUpdate(client);
+	}
+
+}
+
+auto Server::IORecv(AsyncStream* client) -> void
+{
+
+}
+
+auto Server::IOSend(AsyncStream* client, std::wstring msg) -> void
+{
+	mListener.Send(static_cast<Stream*>(client), msg, msg.length() * sizeof(WCHAR));
+}
+
+auto Server::IODisconnect(AsyncStream* client) -> void
+{
+
+}
+
 
 //Iocp::~Iocp() noexcept
 //{

@@ -1,10 +1,8 @@
 #pragma once
-#include "AsyncStream.h"
-
-class AsyncStream;
 
 enum class IOEvent
 {
+	CONNECT,
 	ACCEPT,
 	RECV,
 	SEND,
@@ -13,18 +11,18 @@ enum class IOEvent
 
 class OverlappedEx : public WSAOVERLAPPED
 {
-
 public:
 	OverlappedEx();
+	~OverlappedEx();
 
 public:
-	auto SetIOEVent(IOEvent event) -> void;
-	auto GetIOEvent() -> IOEvent;
-	auto GetOwner() -> AsyncStream*;
-	auto SetOwner(AsyncStream* owner) -> void;
+	auto SetIOEVent(IOEvent event)	-> void;
+	auto GetIOEvent()				-> IOEvent;
+	auto GetOwner()					-> void*;
+	auto SetOwner(void* owner)		-> void;
 
 private:
 	IOEvent mEvent;
-	AsyncStream* mOwner;
+	void* mOwner;
 };
 

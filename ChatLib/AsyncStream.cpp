@@ -15,8 +15,8 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OverlappedEx>() }, mSocket{0}, mR
 	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
 	ZeroMemory(mSendBuf.buf, MAX_BUFF_SIZE);
 	mSendBuf.len = MAX_BUFF_SIZE;
+	mOverlapped->SetIOEVent(IOEvent::CONNECT);
 	mOverlapped->SetOwner(this);
-	mOverlapped->SetIOEVent(IOEvent::ACCEPT);
 }
 
 AsyncStream::~AsyncStream() noexcept
@@ -80,7 +80,7 @@ bool AsyncStream::Recv()
 {
 	DWORD flags = 0;
 	mOverlapped->SetIOEVent(IOEvent::RECV);
-	if (WSARecv(mSocket, &mRecvBuf, 1, NULL, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSARecv(mSocket, &mRecvBuf, 1, &mRecvBytes, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
@@ -90,10 +90,10 @@ bool AsyncStream::Recv()
 	return true;
 }
 
-bool AsyncStream::Send()
+bool AsyncStream::Send(Stream* dest)
 {
 	mOverlapped->SetIOEVent(IOEvent::SEND);
-	if (WSASend(mSocket, &mSendBuf, 1, NULL, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSASend(dest->ConstGetSocket(), &mSendBuf, 1, &mSendBytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)

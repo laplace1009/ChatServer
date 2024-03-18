@@ -21,27 +21,29 @@ public:
 	~Server() noexcept;
 
 public:
-	NODISCARD bool Register(AsyncStream* stream) override;
-	NODISCARD bool Dispatch() override;
-	bool IOAccept(AsyncStream* client) override;
-	bool IORecv(AsyncStream* client) override;
-	bool IOSend(AsyncStream* client) override;
-	bool IODisconnect(AsyncStream* client) override;
+	NODISCARD bool Register(AsyncStream* stream)	override;
+	NODISCARD bool Dispatch()						override;
 
 public:
-	NODISCARD auto Run(uint16) -> bool;
-	NODISCARD auto Run(std::string addr, uint16 port) -> bool;
+	NODISCARD auto Run(uint16)							-> bool;
+	NODISCARD auto Run(std::string addr, uint16 port)	-> bool;
 
 public:
 	auto GetHandle() -> HANDLE;
 
 private:
-	auto accept() -> void;
-	auto acceptRegister(AsyncStream* client) -> void;
+	auto accept()										-> void;
+	auto acceptRegister(AsyncStream* client)			-> void;
+	auto IOConnect(AsyncStream* client)					-> void;
+	auto IOAccept(AsyncStream* client)					-> void;
+	auto IORecv(AsyncStream* client)					-> void;
+	auto IOSend(AsyncStream* client, std::wstring msg)	-> void;
+	auto IODisconnect(AsyncStream* client)				-> void;
 
 private:
 	AsyncListener mListener;
 	HANDLE mHandle;
 	std::vector<AsyncStream*> mClients;
+	static Atomic<uint32> mId;
 };
 

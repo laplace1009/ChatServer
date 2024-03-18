@@ -15,7 +15,7 @@ public:
 	virtual bool Bind(std::string, uint16)				= 0;
 	virtual bool Connect()								= 0;
 	virtual bool Recv()									= 0;
-	virtual bool Send()									= 0;
+	virtual bool Send(Stream* dest)						= 0;
 	
 public:
 	virtual const SOCKET ConstGetSocket() const			= 0;

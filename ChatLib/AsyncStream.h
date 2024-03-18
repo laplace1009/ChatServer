@@ -1,6 +1,5 @@
 #pragma once
 #include "Stream.h"
-#include "TcpStream.h"
 #include "OverlappedEx.h"
 #include "Memory.h"
 
@@ -28,7 +27,7 @@ public:
 	bool Bind(std::string addr, uint16 port)		override;
 	bool Connect()									override;
 	bool Recv()										override;
-	bool Send()										override;
+	bool Send(Stream* dest)							override;
 
 public:
 	const	SOCKET ConstGetSocket() const			override;

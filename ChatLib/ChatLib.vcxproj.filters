@@ -119,6 +119,7 @@
     <ClInclude Include="IOCP.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Client.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChatLib.cpp">
@@ -201,6 +202,9 @@
     </ClCompile>
     <ClCompile Include="IOCP.cpp">
       <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Client.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

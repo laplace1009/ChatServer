@@ -11,13 +11,13 @@ public:
 	~AsyncListener() noexcept override = default;
 
 public:
-	bool BindAny(uint16 port)								override;
-	bool Bind(std::string addr, uint16 port)				override;
-	bool Accept()											override;
-	bool Accept(Stream* client)								override;
-	bool Recv()												override;
-	bool Send(std::wstring msg, DWORD msgLen)				override;
-	bool SetSendMessage(std::wstring msg, DWORD msgSize)	override;
+	bool BindAny(uint16 port)														override;
+	bool Bind(std::string addr, uint16 port)										override;
+	bool Accept()																	override;
+	bool Accept(Stream* client)														override;
+	bool Recv()																		override;
+	bool Send(Stream* client, std::wstring msg, DWORD msgLen)						override;
+	bool SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)			override;
 
 public:
 	const SOCKET	ConstGetSocket() const		override;

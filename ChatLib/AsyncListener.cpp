@@ -61,13 +61,15 @@ bool AsyncListener::Recv()
 	return false;
 }
 
-bool AsyncListener::Send(std::wstring msg, DWORD msgLen)
+bool AsyncListener::Send(Stream* client, std::wstring msg, DWORD msgLen)
 {
-	SetSendMessage(msg, msgLen);
-	return false;
+	SetSendMessage(client, msg, msgLen);
+	mListener.Send(client);
+	mListener.GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
+	return true;
 }
 
-bool AsyncListener::SetSendMessage(std::wstring msg, DWORD msgSize)
+bool AsyncListener::SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)
 {
 	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
 }

@@ -11,8 +11,8 @@ public:
 	bool Accept()											override;
 	bool Accept(Stream* client)								override;
 	bool Recv()												override;
-	bool Send(std::wstring msg, DWORD msgLen)				override;
-	bool SetSendMessage(std::wstring msg, DWORD msgSize)	override;
+	bool Send(Stream* dest, std::wstring msg, DWORD msgLen)				override;
+	bool SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)	override;
 
 public:
 	const SOCKET	ConstGetSocket() const		override;

@@ -30,15 +30,15 @@ bool TcpListener::Recv()
 	return mListener.Recv();
 }
 
-bool TcpListener::Send(std::wstring msg, DWORD msgLen)
+bool TcpListener::Send(Stream* dest, std::wstring msg, DWORD msgLen)
 {
-	if (SetSendMessage(msg, msgLen) == false)
+	if (SetSendMessage(dest, msg, msgLen) == false)
 		return false;
-
-	return mListener.Send();
+	TcpStream* client = new TcpStream();
+	return mListener.Send(client);
 }
 
-bool TcpListener::SetSendMessage(std::wstring msg, DWORD msgSize)
+bool TcpListener::SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)
 {
 	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
 }
