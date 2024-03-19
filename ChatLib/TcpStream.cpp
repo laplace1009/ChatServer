@@ -49,9 +49,9 @@ bool TcpStream::Recv()
 	return recv(mSocket, mRecvBuf.buf, mRecvBuf.len, 0) != SOCKET_ERROR;
 }
 
-bool TcpStream::Send(Stream* dest)
+bool TcpStream::Send(CHAR* msg, size_t size)
 {
-	return send(dest->ConstGetSocket(), mSendBuf.buf, mSendBuf.len, 0) != SOCKET_ERROR;
+	return send(mSocket, mSendBuf.buf, mSendBuf.len, 0) != SOCKET_ERROR;
 }
 
 const SOCKET TcpStream::ConstGetSocket() const

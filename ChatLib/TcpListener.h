@@ -6,12 +6,12 @@
 class TcpListener : public Listener
 {
 public:
-	bool BindAny(uint16 port)								override;
-	bool Bind(std::string addr, uint16 port)				override;
-	bool Accept()											override;
-	bool Accept(Stream* client)								override;
-	bool Recv()												override;
-	bool Send(Stream* dest, std::wstring msg, DWORD msgLen)				override;
+	bool BindAny(uint16 port)											override;
+	bool Bind(std::string addr, uint16 port)							override;
+	bool Accept()														override;
+	bool Accept(Stream* client)											override;
+	bool Recv()															override;
+	bool Send(Stream* dest, CHAR* msg, size_t size)						override;
 	bool SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)	override;
 
 public:

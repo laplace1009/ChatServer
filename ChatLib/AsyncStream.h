@@ -23,11 +23,11 @@ public:
 	static auto CreateSocket()	->	SOCKET;
 
 public:
-	bool BindAny(uint16 port)						override;
-	bool Bind(std::string addr, uint16 port)		override;
-	bool Connect()									override;
-	bool Recv()										override;
-	bool Send(Stream* dest)							override;
+	bool BindAny(uint16 port)					override;
+	bool Bind(std::string addr, uint16 port)	override;
+	bool Connect()								override;
+	bool Recv()									override;
+	bool Send(CHAR* msg, size_t size)			override;
 
 public:
 	const	SOCKET ConstGetSocket() const			override;
@@ -49,7 +49,13 @@ public:
 	auto GetOverlappedPtr() -> OverlappedEx*;
 	auto GetLPOverlappedPtr() -> OverlappedEx**;
 	auto GetIOEvent() -> IOEvent;
+	auto GetSendBytesRef() -> DWORD&;
+	auto GetRecvBytesRef() -> DWORD&;
 	auto SocketConnectUpdate() -> bool;
+	auto SocketReuseAddr() -> bool;
+
+private:
+	auto setMsg(WSABUF& dest, CHAR* msg, size_t size) -> bool;
 
 private:
 	static auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;

@@ -30,15 +30,18 @@ public:
 
 public:
 	auto GetHandle() -> HANDLE;
+	auto GetSocket() -> SOCKET;
 
 private:
-	auto accept()										-> void;
-	auto acceptRegister(AsyncStream* client)			-> void;
-	auto IOConnect(AsyncStream* client)					-> void;
-	auto IOAccept(AsyncStream* client)					-> void;
-	auto IORecv(AsyncStream* client)					-> void;
-	auto IOSend(AsyncStream* client, std::wstring msg)	-> void;
-	auto IODisconnect(AsyncStream* client)				-> void;
+	auto accept()												-> void;
+	auto acceptRegister(AsyncStream* client)					-> void;
+	auto setMsg(CHAR* msg, size_t size)							-> bool;
+	auto IOConnect(AsyncStream* client)							-> void;
+	auto IOAccept(AsyncStream* client)							-> void;
+	auto IORecv(AsyncStream* client)							-> void;
+	auto IOSend(AsyncStream* client, CHAR* msg, size_t size)	-> void;
+	auto IODisconnect(AsyncStream* client)						-> void;
+	auto Log(const char* msg)									-> void;
 
 private:
 	AsyncListener mListener;

@@ -84,22 +84,29 @@ bool AsyncStream::Recv()
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
+		{
+			std::cout << error << std::endl;
 			return false;
+		}
+			
 	}
 
 	return true;
 }
 
-bool AsyncStream::Send(Stream* dest)
+bool AsyncStream::Send(CHAR* msg, size_t size)
 {
-	mOverlapped->SetIOEVent(IOEvent::SEND);
-	if (WSASend(dest->ConstGetSocket(), &mSendBuf, 1, &mSendBytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (setMsg(mSendBuf, msg, size))
 	{
-		int error = WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-			return false;
+		mOverlapped->SetIOEVent(IOEvent::SEND);
+		if (WSASend(mSocket, &mSendBuf, 1, &mSendBytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+		{
+			int error = WSAGetLastError();
+			if (error != WSA_IO_PENDING)
+				return false;
+		}
 	}
-
+	
 	return true;
 }
 
@@ -190,9 +197,31 @@ auto AsyncStream::GetIOEvent() -> IOEvent
 	return mOverlapped->GetIOEvent();
 }
 
+auto AsyncStream::GetSendBytesRef() -> DWORD&
+{
+	return mSendBytes;
+}
+
+auto AsyncStream::GetRecvBytesRef() -> DWORD&
+{
+	return mRecvBytes;
+}
+
 auto AsyncStream::SocketConnectUpdate() -> bool
 {
 	return SetSocketOpt<int>(this, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
+}
+
+auto AsyncStream::SocketReuseAddr() -> bool
+{
+	bool flag = true;
+	return SetSocketOpt<bool>(this, SO_REUSEADDR, &flag, sizeof(bool));
+}
+
+auto AsyncStream::setMsg(WSABUF& dest, CHAR* msg, size_t size) -> bool
+{
+	errno_t error = memcpy_s(dest.buf, dest.len, msg, size);
+	return error == 0;
 }
 
 auto AsyncStream::bindWsaIoctl(GUID guid, LPVOID* fn) -> bool

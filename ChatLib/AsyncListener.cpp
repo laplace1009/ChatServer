@@ -5,7 +5,7 @@ AsyncListener::AsyncListener()
 {
 	ASSERT_CRASH(AsyncStream::Init());
 	SetSocket(AsyncStream::CreateSocket());
-	ASSERT_CRASH(ConstGetSocket() != SOCKET_ERROR);
+	ASSERT_CRASH(ConstGetSocket() != INVALID_SOCKET);
 }
 
 bool AsyncListener::BindAny(uint16 port)
@@ -44,6 +44,7 @@ bool AsyncListener::Accept(Stream* client)
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
 	AsyncStream* newClient = static_cast<AsyncStream*>(client);
+	newClient->SetSocket(newClient->CreateSocket());
 	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), newClient->ConstGetSocket(), newClient->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(newClient->GetOverlappedPtr())))
 	{
 		int error = WSAGetLastError();
@@ -56,17 +57,16 @@ bool AsyncListener::Accept(Stream* client)
 	return true;
 }
 
+// ±¸Çö
 bool AsyncListener::Recv()
 {
-	return false;
+	return mListener.Recv();
 }
 
-bool AsyncListener::Send(Stream* client, std::wstring msg, DWORD msgLen)
+bool AsyncListener::Send(Stream* dest, CHAR* msg, size_t size)
 {
-	SetSendMessage(client, msg, msgLen);
-	mListener.Send(client);
-	mListener.GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
-	return true;
+	int error = WSASend(dest->ConstGetSocket(), &mListener.GetSendBufRef(), 1, &mListener.GetSendBytesRef(), 0, mListener.GetOverlappedPtr(), NULL);
+	return error != SOCKET_ERROR;
 }
 
 bool AsyncListener::SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)
@@ -122,4 +122,14 @@ auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
 auto AsyncListener::SocketAcceptUpdate(AsyncStream* client) -> bool
 {
 	return SetSocketOpt<SOCKET>(client, SO_UPDATE_ACCEPT_CONTEXT, mListener.GetSocketPtr(), sizeof(mListener.ConstGetSocket()));
+}
+
+auto AsyncListener::GetSendBytesRef() -> DWORD&
+{
+	return mListener.GetSendBytesRef();
+}
+
+auto AsyncListener::GetRecvBytesRef() -> DWORD&
+{
+	return mListener.GetRecvBytesRef();
 }

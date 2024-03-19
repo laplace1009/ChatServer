@@ -16,7 +16,7 @@ public:
 	bool Accept()																	override;
 	bool Accept(Stream* client)														override;
 	bool Recv()																		override;
-	bool Send(Stream* client, std::wstring msg, DWORD msgLen)						override;
+	bool Send(Stream* dest, CHAR* msg, size_t size)									override;
 	bool SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)			override;
 
 public:
@@ -34,6 +34,8 @@ public:
 	auto GetSocketPtr() -> SOCKET*;
 	auto GetAsyncStreamRef() -> AsyncStream&;
 	auto SocketAcceptUpdate(AsyncStream* client) -> bool;
+	auto GetSendBytesRef() -> DWORD&;
+	auto GetRecvBytesRef() -> DWORD&;
 
 private:
 	AsyncStream mListener;

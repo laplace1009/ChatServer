@@ -19,7 +19,7 @@ public:
 	bool Bind(std::string addr, uint16 port)	override;
 	bool Connect()								override;
 	bool Recv()									override;
-	bool Send(Stream* dest)						override;
+	bool Send(CHAR* msg, size_t size)			override;
 
 public:
 	const	SOCKET ConstGetSocket() const			override;

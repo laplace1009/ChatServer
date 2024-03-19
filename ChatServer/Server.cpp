@@ -5,7 +5,7 @@ Atomic<uint32> Server::mId = 0;
 
 Server::Server()
 {
-	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
 }
 
@@ -32,39 +32,45 @@ bool Server::Dispatch()
 	DWORD transferred = 0;
 	OverlappedEx* retOver = nullptr;
 	AsyncStream* client = nullptr;
-	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), INFINITE))
+	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
 		client = reinterpret_cast<AsyncStream*>(retOver->GetOwner());
+		std::cout << "Client sock: " << client->ConstGetSocket() << std::endl;
+
 		switch (client->GetIOEvent())
 		{
-		case IOEvent::CONNECT:
-			IOConnect(client);
-			break;
+		case IOEvent::ACCEPT:
+			IOAccept(client);
+			return true;
 		case IOEvent::RECV:
-			IORecv(client);
-			break;
+			Log("Recv OK!\n");
+			return true;
 		case IOEvent::SEND:
-			//IOSend(client);
-			break;
+			Log("Send OK!\n");
+			return true;
 		case IOEvent::DISCONNECT:
 			IODisconnect(client);
-			break;
+			return true;
 		default:
-			break;
+			return true;
 		}
 	}
+	else
+	{
+		std::cout << WSAGetLastError() << std::endl;
+	}
 
-	return true;
+	return false;
 }
 
 auto Server::Run(uint16 port) -> bool
 {
-	if (NULL == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListener.ConstGetSocket()), mHandle, (ULONG_PTR)mListener.ConstGetSocket(), 0))
-		return false;
-
 	if (false == mListener.BindAny(port))
 		return false;
-	
+
+	if (false == Register(&mListener.GetAsyncStreamRef()))
+		return false;
+
 	accept();
 
 	return true;
@@ -72,10 +78,10 @@ auto Server::Run(uint16 port) -> bool
 
 auto Server::Run(std::string addr, uint16 port) -> bool
 {
-	if (NULL == ::CreateIoCompletionPort(reinterpret_cast<HANDLE>(mListener.ConstGetSocket()), mHandle, (ULONG_PTR)mListener.ConstGetSocket(), 0))
+	if (false == mListener.Bind(addr, port))
 		return false;
 
-	if (false == mListener.Bind(addr, port))
+	if (false == Register(&mListener.GetAsyncStreamRef()))
 		return false;
 
 	accept();
@@ -88,9 +94,14 @@ auto Server::GetHandle() -> HANDLE
 	return mHandle;
 }
 
+auto Server::GetSocket() -> SOCKET
+{
+	return mListener.ConstGetSocket();
+}
+
 auto Server::accept() -> void
 {
-	const int32 acceptCount = 5;
+	const int32 acceptCount = 1;
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		AsyncStream* client = xnew<AsyncStream>();
@@ -104,6 +115,12 @@ auto Server::acceptRegister(AsyncStream* client) -> void
 {
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
+	if (Register(client))
+	{
+		std::cout << "True\n";
+	}
+	client->SocketReuseAddr();
+	client->GetOverlappedPtr()->SetIOEVent(IOEvent::ACCEPT);
 	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
 	{
 		int error = WSAGetLastError();
@@ -114,11 +131,14 @@ auto Server::acceptRegister(AsyncStream* client) -> void
 	}
 }
 
+auto Server::setMsg(CHAR* msg, size_t size) -> bool
+{
+	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg, size) == 0;
+}
+
 auto Server::IOConnect(AsyncStream* client) -> void
 {
-	IOAccept(client);
-	mListener.GetAsyncStreamRef().GetOverlappedPtr()->SetIOEVent(IOEvent::ACCEPT);
-	IOSend(client, L"Hello, World");
+	
 }
 
 auto Server::IOAccept(AsyncStream* client) -> void
@@ -128,21 +148,40 @@ auto Server::IOAccept(AsyncStream* client) -> void
 		mListener.SocketAcceptUpdate(client);
 	}
 
+	std::wstring msg{ L"Hello, World!\n" };
+	IOSend(client, reinterpret_cast<CHAR*>(msg.data()), sizeof(WCHAR) * msg.length());
 }
 
 auto Server::IORecv(AsyncStream* client) -> void
 {
-
+	client->Recv();
+	//std::cout << client->GetRecvBufRef().buf << std::endl;
 }
 
-auto Server::IOSend(AsyncStream* client, std::wstring msg) -> void
+auto Server::IOSend(AsyncStream* client, CHAR* msg, size_t size) -> void
 {
-	mListener.Send(static_cast<Stream*>(client), msg, msg.length() * sizeof(WCHAR));
+	
+	if (setMsg(msg, size) == false)
+	{
+		setMsg(msg, size);
+	}
+
+	for (auto& client : mClients)
+	{
+		client->GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
+		mListener.Send(client, msg, size);
+	}
 }
+
 
 auto Server::IODisconnect(AsyncStream* client) -> void
 {
 
+}
+
+auto Server::Log(const char* msg) -> void
+{
+	std::cout << msg << std::endl;
 }
 
 

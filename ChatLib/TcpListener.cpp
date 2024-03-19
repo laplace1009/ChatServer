@@ -25,17 +25,17 @@ bool TcpListener::Accept(Stream* client)
 	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
 }
 
+// 구현
 bool TcpListener::Recv()
 {
 	return mListener.Recv();
 }
 
-bool TcpListener::Send(Stream* dest, std::wstring msg, DWORD msgLen)
+// 구현
+bool TcpListener::Send(Stream* des, CHAR* msg, size_t size)
 {
-	if (SetSendMessage(dest, msg, msgLen) == false)
-		return false;
 	TcpStream* client = new TcpStream();
-	return mListener.Send(client);
+	return true;
 }
 
 bool TcpListener::SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)

@@ -12,7 +12,7 @@ public:
 	virtual bool Accept()															= 0;
 	virtual bool Accept(Stream* client)												= 0;
 	virtual bool Recv()																= 0;
-	virtual bool Send(Stream* client, std::wstring msg, DWORD msgLen)				= 0;
+	virtual bool Send(Stream* dest, CHAR* msg, size_t size)							= 0;
 	virtual bool SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)	= 0;
 
 public:
