@@ -1,41 +1,37 @@
 #pragma once
 #include "Types.h"
-#include "Stream.h"
+#include "Network.h"
 #include "Memory.h"
 #include <string>
 #include <WinSock2.h>
 
-class alignas(16) TcpStream: public Stream
+class alignas(16) TcpStream: public Network
 {
 public:
 	TcpStream();
-	virtual ~TcpStream() noexcept;
-
-public:
-	static auto CreateSocket() -> int;
+	~TcpStream() noexcept override;
 	
 public:
-	bool BindAny(uint16 port)					override;
-	bool Bind(std::string addr, uint16 port)	override;
-	bool Connect()								override;
-	bool Recv()									override;
-	bool Send(CHAR* msg, size_t size)			override;
+	bool BindAny(uint16 port)							override;
+	bool Bind(std::string addr, uint16 port)			override;
+	bool Connect()										override;
+	bool Recv()											override;
+	bool Send(CHAR* msg, size_t size)					override;
 
 public:
-	const	SOCKET ConstGetSocket() const			override;
-	void	SetSocket(SOCKET socket)				override;
-	const	SOCKADDR_IN& ConstGetAddrRef() const	override;
-	SOCKADDR_IN& GetAddrRef()						override;
-	bool	SetAddr(std::string addr, uint16 port)	override;
-	const	WSABUF& ConstGetRecvBufRef() const		override;
-	WSABUF& GetRecvBufRef()							override;
-	const	DWORD ConstGetRecvBytes() const			override;
-	void	SetRecvBytes(DWORD size)				override;
-	const	WSABUF& ConstGetSendBufRef() const		override;
-	WSABUF& GetSendBufRef()							override;
-	const	DWORD ConstGetSendBytes() const			override;
-	void	SetSendBytes(DWORD bytes)				override;
+	const SOCKET	ConstGetSocket() const	override;
+	SOCKET&			GetSocketRef()			override;
+	SOCKADDR_IN&	GetAddrRef()			override;
+	WSABUF&			GetRecvBufRef()			override;
+	WSABUF&			GetSendBufRef()			override;
+	const DWORD		GetRecvBytes() const	override;
+	const DWORD		GetSendBytes() const	override;
 
+public:
+	auto SetAddr(std::string addr, uint16 port) -> void;
+	auto SetRecvBytes(DWORD bytes)				-> void;
+	auto SetSendBytes(DWORD bytes)				-> void;
+	
 private:
 	SOCKET		mSocket;
 	SOCKADDR_IN mAddr;

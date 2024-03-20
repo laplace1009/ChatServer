@@ -22,6 +22,8 @@ bool Server::Register(AsyncStream* stream)
 {
 	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream->ConstGetSocket()), mHandle, 0, 0))
 		return false;
+
+	s
 		
 	return true;
 }
@@ -113,14 +115,17 @@ auto Server::accept() -> void
 
 auto Server::acceptRegister(AsyncStream* client) -> void
 {
+	Register(client);
+
+	if (client->SocketReuseAddr() == false)
+		client->SocketReuseAddr();
+
+	if (client->SocketTcpNoDelay() == false)
+		client->SocketTcpNoDelay();
+
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
-	if (Register(client))
-	{
-		std::cout << "True\n";
-	}
-	client->SocketReuseAddr();
-	client->GetOverlappedPtr()->SetIOEVent(IOEvent::ACCEPT);
+
 	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
 	{
 		int error = WSAGetLastError();
@@ -166,10 +171,12 @@ auto Server::IOSend(AsyncStream* client, CHAR* msg, size_t size) -> void
 		setMsg(msg, size);
 	}
 
+	mListener.GetAsyncStreamRef().GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
+
 	for (auto& client : mClients)
 	{
-		client->GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
 		mListener.Send(client, msg, size);
+		client->Recv();
 	}
 }
 

@@ -38,9 +38,6 @@
     <ClInclude Include="pch.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="OverlappedEx.h">
-      <Filter>Network</Filter>
-    </ClInclude>
     <ClInclude Include="AsyncStream.h">
       <Filter>Network</Filter>
     </ClInclude>
@@ -48,9 +45,6 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Listener.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="Stream.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="BaseAllocator.h">
@@ -120,6 +114,9 @@
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Client.h" />
+    <ClInclude Include="Network.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChatLib.cpp">
@@ -131,9 +128,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="OverlappedEx.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="AsyncStream.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -141,9 +135,6 @@
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Listener.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="Stream.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Memory.cpp">
@@ -205,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="Client.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Network.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

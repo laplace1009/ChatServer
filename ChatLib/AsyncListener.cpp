@@ -4,8 +4,6 @@
 AsyncListener::AsyncListener()
 {
 	ASSERT_CRASH(AsyncStream::Init());
-	SetSocket(AsyncStream::CreateSocket());
-	ASSERT_CRASH(ConstGetSocket() != INVALID_SOCKET);
 }
 
 bool AsyncListener::BindAny(uint16 port)
@@ -26,8 +24,7 @@ bool AsyncListener::Accept()
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
 	AsyncStream* client = xnew<AsyncStream>();
-	client->SetSocket(client->CreateSocket());
-	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedRef())))
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
@@ -39,49 +36,52 @@ bool AsyncListener::Accept()
 	return true;
 }
 
-bool AsyncListener::Accept(Stream* client)
-{
-	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
-	DWORD recvBytes{ 0 };
-	AsyncStream* newClient = static_cast<AsyncStream*>(client);
-	newClient->SetSocket(newClient->CreateSocket());
-	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), newClient->ConstGetSocket(), newClient->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(newClient->GetOverlappedPtr())))
-	{
-		int error = WSAGetLastError();
-		if (error != WSA_IO_PENDING)
-		{
-			
-		}
-	}
 
-	return true;
-}
-
-// ±¸Çö
 bool AsyncListener::Recv()
 {
 	return mListener.Recv();
 }
 
-bool AsyncListener::Send(Stream* dest, CHAR* msg, size_t size)
+bool AsyncListener::Send(CHAR* msg, size_t size)
 {
-	int error = WSASend(dest->ConstGetSocket(), &mListener.GetSendBufRef(), 1, &mListener.GetSendBytesRef(), 0, mListener.GetOverlappedPtr(), NULL);
-	return error != SOCKET_ERROR;
+	return WSASend(mListener.ConstGetSocket(), &mListener.GetSendBufRef(), 1, &mListener.GetSendBytesRef(), 0, mListener.GetOverlappedRef(), NULL);
 }
 
-bool AsyncListener::SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)
+auto AsyncListener::Accept(AsyncStream* client) -> bool
 {
-	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
+	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
+	DWORD recvBytes{ 0 };
+	AsyncStream* newClient = static_cast<AsyncStream*>(client);
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), newClient->ConstGetSocket(), newClient->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(newClient->GetOverlappedRef())))
+	{
+		int error = WSAGetLastError();
+		if (error != WSA_IO_PENDING)
+		{
+
+		}
+	}
+
+	return true;
 }
+
+auto AsyncListener::Send(AsyncStream* dest, CHAR* msg, size_t size) -> bool
+{
+	return SOCKET_ERROR != WSASend(dest->ConstGetSocket(), &mListener.GetSendBufRef(), 1, &mListener.GetSendBytesRef(), 0, mListener.GetOverlappedRef(), NULL);
+}
+
+//bool AsyncListener::SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)
+//{
+//	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
+//}
 
 const SOCKET AsyncListener::ConstGetSocket() const
 {
 	return mListener.ConstGetSocket();
 }
 
-void AsyncListener::SetSocket(SOCKET socket)
+SOCKET& AsyncListener::GetSocketRef()
 {
-	mListener.SetSocket(socket);
+	return mListener.GetSocketRef();
 }
 
 SOCKADDR_IN& AsyncListener::GetAddrRef()
@@ -94,24 +94,34 @@ WSABUF& AsyncListener::GetRecvBufRef()
 	return mListener.GetRecvBufRef();
 }
 
-const DWORD AsyncListener::GetRecvBytes() const
-{
-	return mListener.ConstGetRecvBytes();
-}
-
 WSABUF& AsyncListener::GetSendBufRef()
 {
 	return mListener.GetSendBufRef();
 }
 
-const DWORD AsyncListener::GetSendBytes() const
+const DWORD AsyncListener::GetRecvBytes() const
 {
-	return mListener.ConstGetSendBytes();
+	return mListener.GetRecvBytes();
 }
 
-auto AsyncListener::GetSocketPtr() -> SOCKET*
+const DWORD AsyncListener::GetSendBytes() const
 {
-	return mListener.GetSocketPtr();
+	return mListener.GetSendBytes();
+}
+
+auto AsyncListener::SetSocket(SOCKET socket) -> void
+{
+	mListener.GetSocketRef() = socket;
+}
+
+auto AsyncListener::SetRecvBytes(DWORD bytes) -> void
+{
+	mListener.SetRecvBytes(bytes);
+}
+
+auto AsyncListener::SetSendBytes(DWORD bytes) -> void
+{
+	mListener.SetSendBytes(bytes);
 }
 
 auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
@@ -121,7 +131,7 @@ auto AsyncListener::GetAsyncStreamRef() -> AsyncStream&
 
 auto AsyncListener::SocketAcceptUpdate(AsyncStream* client) -> bool
 {
-	return SetSocketOpt<SOCKET>(client, SO_UPDATE_ACCEPT_CONTEXT, mListener.GetSocketPtr(), sizeof(mListener.ConstGetSocket()));
+	return SetSocketOpt<SOCKET>(client, SO_UPDATE_ACCEPT_CONTEXT, &mListener.GetSocketRef(), sizeof(mListener.ConstGetSocket()));
 }
 
 auto AsyncListener::GetSendBytesRef() -> DWORD&

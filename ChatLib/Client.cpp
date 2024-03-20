@@ -4,8 +4,7 @@
 Client::Client() : mId{0}
 {
 	mClient.Init();
-	mClient.GetOverlappedPtr()->SetOwner(this);
-	mClient.SetSocket(AsyncStream::CreateSocket());
+	//mClient.GetOverlappedPtr()->SetOwner(this);
 	ASSERT_CRASH(mClient.ConstGetSocket() == INVALID_SOCKET);
 }
 

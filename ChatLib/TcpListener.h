@@ -6,24 +6,28 @@
 class TcpListener : public Listener
 {
 public:
-	bool BindAny(uint16 port)											override;
-	bool Bind(std::string addr, uint16 port)							override;
-	bool Accept()														override;
-	bool Accept(Stream* client)											override;
-	bool Recv()															override;
-	bool Send(Stream* dest, CHAR* msg, size_t size)						override;
-	bool SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)	override;
+	bool BindAny(uint16 port)					override;
+	bool Bind(std::string addr, uint16 port)	override;
+	bool Accept()								override;
+	bool Recv()									override;
+	bool Send(CHAR* msg, size_t size)			override;
 
 public:
-	const SOCKET	ConstGetSocket() const		override;
-	void			SetSocket(SOCKET socket)	override;
-	SOCKADDR_IN&	GetAddrRef()				override;
-	WSABUF&			GetRecvBufRef()				override;
-	const DWORD		GetRecvBytes() const		override;
-	//void			SetRecvBytes(DWORD bytes)	override;
-	WSABUF&			GetSendBufRef()				override;
-	const DWORD		GetSendBytes() const		override;
-	//void			SetSendBytes(DWORD bytes)	override;
+	auto Accept(TcpStream* clien) -> bool;
+	auto Send(TcpStream* dest, CHAR* msg, size_t size) -> bool;
+
+public:
+	const SOCKET	ConstGetSocket() const	override;
+	SOCKADDR_IN&	GetAddrRef()			override;
+	WSABUF&			GetRecvBufRef()			override;
+	const DWORD		GetRecvBytes() const	override;
+	WSABUF&			GetSendBufRef()			override;
+	const DWORD		GetSendBytes() const	override;
+
+public:
+	auto SetSocket(SOCKET socket)	-> void;
+	auto SetRecvBytes(DWORD bytes)	-> void;
+	auto SetSendBytes(DWORD bytes)	-> void;
 
 private:
 	TcpStream mListener;

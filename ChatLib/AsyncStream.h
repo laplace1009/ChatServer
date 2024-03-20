@@ -1,12 +1,25 @@
 #pragma once
-#include "Stream.h"
-#include "OverlappedEx.h"
+#include "Network.h"
 #include "Memory.h"
 
-class OverlappedEx;
-enum class IOEvent;
+class AsyncStream;
 
-class AsyncStream : public Stream
+enum class IOEvent
+{
+	CONNECT,
+	ACCEPT,
+	RECV,
+	SEND,
+	DISCONNECT,
+};
+
+typedef struct OverlappedEx : WSAOVERLAPPED
+{
+	IOEvent			ioEvent;
+	AsyncStream*	owner;
+} OVERLAPPEDEX, * LPOVERLAPPEDEX;
+
+class alignas(16) AsyncStream : public Network
 {
 public:
 	static LPFN_CONNECTEX				ConnectEx;
@@ -19,8 +32,7 @@ public:
 	~AsyncStream() noexcept override;
 
 public:
-	static auto Init()			->	bool;
-	static auto CreateSocket()	->	SOCKET;
+	static auto Init() -> bool;
 
 public:
 	bool BindAny(uint16 port)					override;
@@ -31,28 +43,26 @@ public:
 
 public:
 	const	SOCKET ConstGetSocket() const			override;
-	void	SetSocket(SOCKET socket)				override;
-	const	SOCKADDR_IN& ConstGetAddrRef() const	override;
+	SOCKET& GetSocketRef()							override;
 	SOCKADDR_IN& GetAddrRef()						override;
-	bool	SetAddr(std::string addr, uint16 port)	override;
-	const	WSABUF& ConstGetRecvBufRef() const		override;
 	WSABUF& GetRecvBufRef()							override;
-	const	DWORD ConstGetRecvBytes() const			override;
-	void	SetRecvBytes(DWORD bytes)				override;
-	const	WSABUF& ConstGetSendBufRef() const		override;
 	WSABUF& GetSendBufRef()							override;
-	const	DWORD ConstGetSendBytes() const			override;
-	void	SetSendBytes(DWORD bytes)				override;
+	const DWORD GetRecvBytes() const				override;
+	const DWORD GetSendBytes() const				override;
 
 public:
-	auto GetSocketPtr() -> SOCKET*;
-	auto GetOverlappedPtr() -> OverlappedEx*;
-	auto GetLPOverlappedPtr() -> OverlappedEx**;
-	auto GetIOEvent() -> IOEvent;
-	auto GetSendBytesRef() -> DWORD&;
-	auto GetRecvBytesRef() -> DWORD&;
-	auto SocketConnectUpdate() -> bool;
-	auto SocketReuseAddr() -> bool;
+	auto GetOverlappedRef()						-> LPOVERLAPPEDEX&;
+	auto GetLPOverlappedPtr()					-> OverlappedEx**;
+	auto GetIOEvent()							-> IOEvent;
+	auto SetIOEvent(IOEvent event)				-> void;
+	auto SetAddr(std::string addr, uint16 port) -> bool;
+	auto GetSendBytesRef()						-> DWORD&;
+	auto SetRecvBytes(DWORD bytes)				-> void;
+	auto GetRecvBytesRef()						-> DWORD&;
+	auto SetSendBytes(DWORD bytes)				-> void;
+	auto SocketConnectUpdate()					-> bool;
+	auto SocketReuseAddr()						-> bool;
+	auto SocketTcpNoDelay()						-> bool;
 
 private:
 	auto setMsg(WSABUF& dest, CHAR* msg, size_t size) -> bool;
@@ -61,7 +71,7 @@ private:
 	static auto bindWsaIoctl(GUID guid, LPVOID* fn) -> bool;
 
 private:
-	OverlappedEx*	mOverlapped;
+	LPOVERLAPPEDEX	mOverlapped;
 	SOCKET			mSocket;
 	SOCKADDR_IN		mAddr;
 	WSABUF			mRecvBuf;

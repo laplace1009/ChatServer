@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "TcpListener.h"
-#include "OverlappedEx.h"
 
 bool TcpListener::BindAny(uint16 port)
 {
@@ -19,38 +18,31 @@ bool TcpListener::Accept()
 	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
 }
 
-bool TcpListener::Accept(Stream* client)
-{
-	int addrLen = sizeof(SOCKADDR_IN);
-	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
-}
-
 // 구현
 bool TcpListener::Recv()
 {
 	return mListener.Recv();
 }
 
-// 구현
-bool TcpListener::Send(Stream* des, CHAR* msg, size_t size)
+bool TcpListener::Send(CHAR* msg, size_t size)
 {
-	TcpStream* client = new TcpStream();
-	return true;
+	return ::send(mListener.ConstGetSocket(), msg, static_cast<int>(size), 0);
 }
 
-bool TcpListener::SetSendMessage(Stream* dest, std::wstring msg, DWORD msgSize)
+auto TcpListener::Accept(TcpStream* client) -> bool
 {
-	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
+	int addrLen = sizeof(SOCKADDR_IN);
+	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
+}
+
+auto TcpListener::Send(TcpStream* dest, CHAR* msg, size_t size) -> bool
+{
+	return ::send(dest->ConstGetSocket(), msg, static_cast<int>(size), 0) != SOCKET_ERROR;
 }
 
 const SOCKET TcpListener::ConstGetSocket() const
 {
 	return mListener.ConstGetSocket();
-}
-
-void TcpListener::SetSocket(SOCKET socket)
-{
-	mListener.SetSocket(socket);
 }
 
 SOCKADDR_IN& TcpListener::GetAddrRef()
@@ -65,13 +57,8 @@ WSABUF& TcpListener::GetRecvBufRef()
 
 const DWORD TcpListener::GetRecvBytes() const
 {
-	return mListener.ConstGetRecvBytes();
+	return mListener.GetRecvBytes();
 }
-
-//void TcpListener::SetRecvBytes(DWORD bytes)
-//{
-//	mStream.get
-//}
 
 WSABUF& TcpListener::GetSendBufRef()
 {
@@ -80,10 +67,21 @@ WSABUF& TcpListener::GetSendBufRef()
 
 const DWORD TcpListener::GetSendBytes() const
 {
-	return mListener.ConstGetSendBytes();
+	return mListener.GetSendBytes();
 }
 
-//void TcpListener::SetSendBytes(DWORD bytes)
-//{
-//}
+auto TcpListener::SetSocket(SOCKET socket) -> void
+{
+	mListener.GetSocketRef() = socket;
+}
+
+auto TcpListener::SetRecvBytes(DWORD bytes) -> void
+{
+	mListener.SetRecvBytes(bytes);
+}
+
+auto TcpListener::SetSendBytes(DWORD bytes) -> void
+{
+	mListener.SetSendBytes(bytes);
+}
 
