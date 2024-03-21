@@ -1,9 +1,9 @@
 #pragma once
-#include "AsyncStream.h"
+#include "NetworkEndpoint.h"
 
 class IOCP
 {
-	virtual bool Register(AsyncStream*) = 0;
+	virtual bool Register(LPAsyncEndpoint socket) = 0;
 	virtual bool Dispatch() = 0;
 };
 

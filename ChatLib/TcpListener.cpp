@@ -15,73 +15,48 @@ bool TcpListener::Accept()
 {
 	TcpStream* client = xnew<TcpStream>();
 	int addrLen = sizeof(SOCKADDR_IN);
-	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
+	return ::accept(mListener.GetEndpointRef().ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
 }
 
-// ±¸Çö
-bool TcpListener::Recv()
+bool TcpListener::Recv(WSABUF* buf, DWORD* bytes)
 {
 	return mListener.Recv();
 }
 
-bool TcpListener::Send(CHAR* msg, size_t size)
+bool TcpListener::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	return ::send(mListener.ConstGetSocket(), msg, static_cast<int>(size), 0);
+	return mListener.Send(buf, bytes, msg, size);
 }
 
-auto TcpListener::Accept(TcpStream* client) -> bool
+auto TcpListener::Accept(TcpEndpoint* client) -> bool
 {
 	int addrLen = sizeof(SOCKADDR_IN);
-	return ::accept(mListener.ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetAddrRef()), &addrLen);
+	return ::accept(mListener.GetEndpointRef().ConstGetSocket(), reinterpret_cast<PSOCKADDR>(&client->GetEndpointRef().GetAddrRef()), &addrLen);
 }
 
-auto TcpListener::Send(TcpStream* dest, CHAR* msg, size_t size) -> bool
+auto TcpListener::Send(TcpEndpoint* dest, CHAR* msg, size_t size) -> bool
 {
-	return ::send(dest->ConstGetSocket(), msg, static_cast<int>(size), 0) != SOCKET_ERROR;
+	return ::send(dest->GetEndpointRef().ConstGetSocket(), msg, static_cast<int>(size), 0) != SOCKET_ERROR;
 }
+
 
 const SOCKET TcpListener::ConstGetSocket() const
 {
-	return mListener.ConstGetSocket();
+	return mListener.ConstGetEndPointRef().ConstGetSocket();
 }
 
 SOCKADDR_IN& TcpListener::GetAddrRef()
 {
-	return mListener.GetAddrRef();
-}
-
-WSABUF& TcpListener::GetRecvBufRef()
-{
-	return mListener.GetRecvBufRef();
-}
-
-const DWORD TcpListener::GetRecvBytes() const
-{
-	return mListener.GetRecvBytes();
-}
-
-WSABUF& TcpListener::GetSendBufRef()
-{
-	return mListener.GetSendBufRef();
-}
-
-const DWORD TcpListener::GetSendBytes() const
-{
-	return mListener.GetSendBytes();
+	return mListener.GetEndpointRef().GetAddrRef();
 }
 
 auto TcpListener::SetSocket(SOCKET socket) -> void
 {
-	mListener.GetSocketRef() = socket;
+	mListener.GetEndpointRef().GetSocketRef() = socket;
 }
 
-auto TcpListener::SetRecvBytes(DWORD bytes) -> void
+auto TcpListener::SetTransferredBytes(DWORD bytes) -> void
 {
-	mListener.SetRecvBytes(bytes);
-}
-
-auto TcpListener::SetSendBytes(DWORD bytes) -> void
-{
-	mListener.SetSendBytes(bytes);
+	mListener.GetTransferredBytesRef() = bytes;
 }
 

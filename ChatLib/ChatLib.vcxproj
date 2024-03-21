@@ -158,7 +158,6 @@
     <ClInclude Include="AsyncListener.h" />
     <ClInclude Include="AsyncStream.h" />
     <ClInclude Include="BaseAllocator.h" />
-    <ClInclude Include="Client.h" />
     <ClInclude Include="Container.h" />
     <ClInclude Include="CorePch.h" />
     <ClInclude Include="FixedSizeMemory.h" />
@@ -171,6 +170,7 @@
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MultiSizeMemory.h" />
     <ClInclude Include="Network.h" />
+    <ClInclude Include="NetworkEndpoint.h" />
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="PoolAllocator.h" />
     <ClInclude Include="ReadLockGuard.h" />
@@ -189,7 +189,6 @@
     <ClCompile Include="AsyncListener.cpp" />
     <ClCompile Include="AsyncStream.cpp" />
     <ClCompile Include="BaseAllocator.cpp" />
-    <ClCompile Include="Client.cpp" />
     <ClCompile Include="CorePch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -205,6 +204,7 @@
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MultiSizeMemory.cpp" />
     <ClCompile Include="Network.cpp" />
+    <ClCompile Include="NetworkEndpoint.cpp" />
     <ClCompile Include="ObjectPool.cpp" />
     <ClCompile Include="PoolAllocator.cpp" />
     <ClCompile Include="ReadLockGuard.cpp" />

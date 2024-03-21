@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.h"
 
 enum
 {
@@ -11,20 +12,16 @@ public:
 	virtual ~Network() = default;
 
 public:
-	virtual bool BindAny(uint16)								= 0;
-	virtual bool Bind(std::string, uint16)						= 0;
-	virtual bool Connect()										= 0;
-	virtual bool Recv()											= 0;
-	virtual bool Send(CHAR* msg, size_t bytes)					= 0;
+	virtual bool BindAny(uint16)										 = 0;
+	virtual bool Bind(std::string, uint16)								 = 0;
+	virtual bool Connect(DWORD* bytes)									 = 0;
+	virtual bool Recv(WSABUF* buf, DWORD* bytes)						 = 0;
+	virtual bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size) = 0;
 
 public:
 	virtual const SOCKET ConstGetSocket() const = 0;
 	virtual SOCKET& GetSocketRef()				= 0;
 	virtual SOCKADDR_IN& GetAddrRef()			= 0;
-	virtual WSABUF& GetRecvBufRef()				= 0;
-	virtual const DWORD GetRecvBytes() const	= 0;
-	virtual WSABUF& GetSendBufRef()				= 0;
-	virtual const DWORD GetSendBytes() const	= 0;
 };
 
 auto CreateSocket() -> SOCKET

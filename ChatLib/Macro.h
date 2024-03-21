@@ -14,6 +14,8 @@
 #define NODISCARD_MSG(msg) [[nodiscard]]
 #endif
 
+#define UN_USED [[maybe_unused]]
+
 
 #define XALLOCATE(size)	PoolAllocator::Allocate(size)
 #define XRELEASE(ptr)	PoolAllocator::Release(ptr)

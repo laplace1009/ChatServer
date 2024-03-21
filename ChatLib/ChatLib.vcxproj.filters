@@ -113,8 +113,10 @@
     <ClInclude Include="IOCP.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="Client.h" />
     <ClInclude Include="Network.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkEndpoint.h">
       <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
@@ -194,10 +196,10 @@
     <ClCompile Include="IOCP.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="Client.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Network.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkEndpoint.cpp">
       <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>

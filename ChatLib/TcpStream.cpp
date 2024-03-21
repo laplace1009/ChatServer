@@ -1,23 +1,9 @@
 #include "pch.h"
 #include "TcpStream.h"
 
-TcpStream::TcpStream() : mSocket{0}, mRecvBytes{0}, mSendBytes{0}
+TcpStream::TcpStream() : mSocket{0}
 {
 	ZeroMemory(&mAddr, sizeof(mAddr));
-	mRecvBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
-	mRecvBuf.len = MAX_BUFF_SIZE;
-	mSendBuf.buf = static_cast<CHAR*>(XALLOCATE(2048));
-	mSendBuf.len = MAX_BUFF_SIZE;
-}
-
-TcpStream::~TcpStream()
-{
-	XRELEASE(mRecvBuf.buf);
-	mRecvBuf.buf = nullptr;
-	mRecvBuf.len = 0;
-	XRELEASE(mSendBuf.buf);
-	mSendBuf.buf = nullptr;
-	mSendBuf.len = 0;
 }
 
 bool TcpStream::BindAny(uint16 port)
@@ -34,19 +20,20 @@ bool TcpStream::Bind(std::string addr, uint16 port)
 	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
 }
 
-auto TcpStream::Connect() -> bool
+
+auto TcpStream::Connect(DWORD* bytes) -> bool
 {
 	return connect(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
 }
 
-bool TcpStream::Recv()
+bool TcpStream::Recv(WSABUF* buf, DWORD* bytes)
 {
-	return recv(mSocket, mRecvBuf.buf, mRecvBuf.len, 0) != SOCKET_ERROR;
+	return recv(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR;
 }
 
-bool TcpStream::Send(CHAR* msg, size_t size)
+bool TcpStream::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	return send(mSocket, mSendBuf.buf, mSendBuf.len, 0) != SOCKET_ERROR;
+	return send(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR;
 }
 
 const SOCKET TcpStream::ConstGetSocket() const
@@ -64,39 +51,26 @@ SOCKADDR_IN& TcpStream::GetAddrRef()
 	return mAddr;
 }
 
-WSABUF& TcpStream::GetRecvBufRef()
-{
-	return mRecvBuf;
-}
-
-WSABUF& TcpStream::GetSendBufRef()
-{
-	return mSendBuf;
-}
-
-const DWORD TcpStream::GetRecvBytes() const
-{
-	return mRecvBytes;
-}
-
-const DWORD TcpStream::GetSendBytes() const
-{
-	return mSendBytes;
-}
-
-auto TcpStream::SetRecvBytes(DWORD bytes) -> void
-{
-	mRecvBytes = bytes;
-}
-
-auto TcpStream::SetSendBytes(DWORD bytes) -> void
-{
-	mSendBytes = bytes;
-}
-
 auto TcpStream::SetAddr(std::string addr, uint16 port) -> void
 {
 	mAddr.sin_family = AF_INET;
 	mAddr.sin_port = htons(port);
 	inet_pton(AF_INET, addr.c_str(), &mAddr);
+}
+
+auto TcpStream::SocketConnectUpdate() -> bool
+{
+	return SetSocketOpt<int>(this, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
+}
+
+auto TcpStream::SocketReuseAddr() -> bool
+{
+	bool flag{ true };
+	return SetSocketOpt<bool>(this, SO_REUSEADDR, &flag, sizeof(bool));
+}
+
+auto TcpStream::SocketTcpNoDelay() -> bool
+{
+	bool flag{ true };
+	return SetSocketOpt<bool>(this, TCP_NODELAY, &flag, sizeof(bool));
 }
