@@ -24,7 +24,7 @@ public:
 	virtual SOCKADDR_IN& GetAddrRef()			= 0;
 };
 
-auto CreateSocket() -> SOCKET
+inline SOCKET CreateSocket() 
 {
 	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }

@@ -81,7 +81,7 @@ auto AsyncListener::Send(AsyncEndpoint* dest, CHAR* msg, size_t size) -> bool
 
 const SOCKET AsyncListener::ConstGetSocket() const
 {
-	return mListener.GetTransferredBytes();
+	return mListener.ConstGetSocket();
 }
 
 SOCKET& AsyncListener::GetSocketRef()

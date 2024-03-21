@@ -7,23 +7,26 @@ Server::Server()
 {
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
+	mRecvBuf.buf = reinterpret_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
+	mRecvBuf.len = MAX_BUFF_SIZE;
 }
 
 Server::~Server() noexcept
 {
 	for (auto client : mClients)
 	{
-		xdelete<AsyncStream>(client);
+		xdelete<AsyncEndpoint>(client);
 	}
 	mClients.clear();
+	XRELEASE(mRecvBuf.buf);
+	mRecvBuf.buf = nullptr;
 }
 
-bool Server::Register(AsyncStream* stream)
+bool Server::Register(LPAsyncEndpoint socket)
 {
-	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream->ConstGetSocket()), mHandle, 0, 0))
+	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket->ConstGetSocket()), mHandle, 0, 0))
 		return false;
 
-	s
 		
 	return true;
 }
@@ -33,13 +36,13 @@ bool Server::Dispatch()
 	ULONG_PTR key;
 	DWORD transferred = 0;
 	OverlappedEx* retOver = nullptr;
-	AsyncStream* client = nullptr;
+	LPAsyncEndpoint client = nullptr;
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
-		client = reinterpret_cast<AsyncStream*>(retOver->GetOwner());
+		client = reinterpret_cast<LPAsyncEndpoint>(retOver->owner);
 		std::cout << "Client sock: " << client->ConstGetSocket() << std::endl;
 
-		switch (client->GetIOEvent())
+		switch (client->GetEndpointRef().GetIOEvent())
 		{
 		case IOEvent::ACCEPT:
 			IOAccept(client);
@@ -106,14 +109,13 @@ auto Server::accept() -> void
 	const int32 acceptCount = 1;
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
-		AsyncStream* client = xnew<AsyncStream>();
-		client->SetSocket(AsyncStream::CreateSocket());
+		LPAsyncEndpoint client = xnew<AsyncEndpoint>();
 		mClients.emplace_back(client);
 		acceptRegister(client);
 	}
 }
 
-auto Server::acceptRegister(AsyncStream* client) -> void
+auto Server::acceptRegister(LPAsyncEndpoint client) -> void
 {
 	Register(client);
 
@@ -126,7 +128,7 @@ auto Server::acceptRegister(AsyncStream* client) -> void
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
 
-	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetRecvBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetOverlappedPtr())))
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetEndpointRef().GetOverlappedRef())))
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
@@ -138,32 +140,35 @@ auto Server::acceptRegister(AsyncStream* client) -> void
 
 auto Server::setMsg(CHAR* msg, size_t size) -> bool
 {
-	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg, size) == 0;
+	return memcpy_s(mRecvBuf.buf, mRecvBuf.len, msg, size) == 0;
 }
 
-auto Server::IOConnect(AsyncStream* client) -> void
+auto Server::IOConnect(LPAsyncEndpoint client) -> void
 {
 	
 }
 
-auto Server::IOAccept(AsyncStream* client) -> void
+auto Server::IOAccept(LPAsyncEndpoint client) -> void
 {
 	if (mListener.SocketAcceptUpdate(client) == false)
 	{
 		mListener.SocketAcceptUpdate(client);
 	}
 
-	std::wstring msg{ L"Hello, World!\n" };
-	IOSend(client, reinterpret_cast<CHAR*>(msg.data()), sizeof(WCHAR) * msg.length());
+	client->Recv();
+	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
+
+	//std::wstring msg{ L"Hello, World!\n" };
+	//IOSend(client, reinterpret_cast<CHAR*>(msg.data()), sizeof(WCHAR) * msg.length());
 }
 
-auto Server::IORecv(AsyncStream* client) -> void
+auto Server::IORecv(LPAsyncEndpoint client) -> void
 {
 	client->Recv();
 	//std::cout << client->GetRecvBufRef().buf << std::endl;
 }
 
-auto Server::IOSend(AsyncStream* client, CHAR* msg, size_t size) -> void
+auto Server::IOSend(CHAR* msg, size_t size) -> void
 {
 	
 	if (setMsg(msg, size) == false)
@@ -171,17 +176,14 @@ auto Server::IOSend(AsyncStream* client, CHAR* msg, size_t size) -> void
 		setMsg(msg, size);
 	}
 
-	mListener.GetAsyncStreamRef().GetOverlappedPtr()->SetIOEVent(IOEvent::SEND);
-
 	for (auto& client : mClients)
 	{
 		mListener.Send(client, msg, size);
-		client->Recv();
 	}
 }
 
 
-auto Server::IODisconnect(AsyncStream* client) -> void
+auto Server::IODisconnect(LPAsyncEndpoint client) -> void
 {
 
 }

@@ -1,11 +1,12 @@
 #pragma once
 #include "Types.h"
-#include "Iocp.h"
+#include "IOCP.h"
 #include "ReadWriteLock.h"
 #include "ReadLockGuard.h"
 #include "WriteLockGuard.h"
 #include "AsyncStream.h"
 #include "AsyncListener.h"
+#include "NetworkEndpoint.h"
 #include <vector>
 #include <string>
 
@@ -21,7 +22,7 @@ public:
 	~Server() noexcept;
 
 public:
-	NODISCARD bool Register(AsyncStream* stream)	override;
+	NODISCARD bool Register(LPAsyncEndpoint socket)	override;
 	NODISCARD bool Dispatch()						override;
 
 public:
@@ -33,20 +34,21 @@ public:
 	auto GetSocket() -> SOCKET;
 
 private:
-	auto accept()												-> void;
-	auto acceptRegister(AsyncStream* client)					-> void;
-	auto setMsg(CHAR* msg, size_t size)							-> bool;
-	auto IOConnect(AsyncStream* client)							-> void;
-	auto IOAccept(AsyncStream* client)							-> void;
-	auto IORecv(AsyncStream* client)							-> void;
-	auto IOSend(AsyncStream* client, CHAR* msg, size_t size)	-> void;
-	auto IODisconnect(AsyncStream* client)						-> void;
-	auto Log(const char* msg)									-> void;
+	auto accept()								-> void;
+	auto acceptRegister(LPAsyncEndpoint client)	-> void;
+	auto setMsg(CHAR* msg, size_t size)			-> bool;
+	auto IOConnect(LPAsyncEndpoint client)		-> void;
+	auto IOAccept(LPAsyncEndpoint client)		-> void;
+	auto IORecv(LPAsyncEndpoint client)			-> void;
+	auto IOSend(CHAR* msg, size_t size)			-> void;
+	auto IODisconnect(LPAsyncEndpoint client)	-> void;
+	auto Log(const char* msg)					-> void;
 
 private:
-	AsyncListener mListener;
-	HANDLE mHandle;
-	std::vector<AsyncStream*> mClients;
-	static Atomic<uint32> mId;
+	AsyncListener					mListener;
+	HANDLE							mHandle;
+	std::vector<LPAsyncEndpoint>	mClients;
+	WSABUF							mRecvBuf;
+	static Atomic<uint32>			mId;
 };
 

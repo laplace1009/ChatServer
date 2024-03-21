@@ -54,6 +54,11 @@ public:
 		mEndPoint.GetSocketRef() = socket;
 	}
 
+	auto SetAddr(String addr, uint16 port) -> bool
+	{
+		return mEndPoint.SetAddr(addr, port);
+	}
+
 public:
 	auto ConstGetEndPointRef() const -> const T&
 	{
