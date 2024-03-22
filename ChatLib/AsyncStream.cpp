@@ -12,7 +12,8 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OVERLAPPEDEX>() }, mSocket{ Creat
 	ZeroMemory(mOverlapped, sizeof(OVERLAPPEDEX));
 	ZeroMemory(&mAddr, sizeof(mAddr));
 	mOverlapped->ioEvent = IOEvent::CONNECT;
-	mOverlapped->owner = this;
+	ASSERT_CRASH(SocketReuseAddr());
+	ASSERT_CRASH(SocketTcpNoDelay());
 }
 
 AsyncStream::~AsyncStream() noexcept
@@ -22,11 +23,6 @@ AsyncStream::~AsyncStream() noexcept
 
 auto AsyncStream::Init() -> bool
 {	
-	WSADATA wsa;
-
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return false;
-
 	if (bindWsaIoctl(WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&ConnectEx)) == false)
 		return false;
 
@@ -79,15 +75,18 @@ bool AsyncStream::Recv(WSABUF* buf, DWORD* bytes)
 	return true;
 }
 
-bool AsyncStream::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
+bool AsyncStream::Send(WSABUF* sendBuf, DWORD* bytes, CHAR* msg, size_t size)
 {
 	mOverlapped->ioEvent = IOEvent::SEND;
-
-	if (WSASend(mSocket, buf, 1, bytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSASend(mSocket, sendBuf, 1, bytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
+		{
+			std::cout << error << std::endl;
 			return false;
+		}
+			
 	}
 
 	return true;

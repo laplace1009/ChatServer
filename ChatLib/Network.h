@@ -24,6 +24,16 @@ public:
 	virtual SOCKADDR_IN& GetAddrRef()			= 0;
 };
 
+inline bool NetworkInit()
+{
+	WSADATA wsa;
+
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+		return false;
+
+	return true;
+}
+
 inline SOCKET CreateSocket() 
 {
 	return WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);

@@ -16,6 +16,8 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <type_traits>
+#include <queue>
 
 #include <Windows.h>
 #include <WinSock2.h>

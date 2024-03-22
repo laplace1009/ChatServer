@@ -7,8 +7,7 @@ Server::Server()
 {
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
-	mRecvBuf.buf = reinterpret_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
-	mRecvBuf.len = MAX_BUFF_SIZE;
+	ASSERT_CRASH(AsyncStream::Init());
 }
 
 Server::~Server() noexcept
@@ -16,10 +15,19 @@ Server::~Server() noexcept
 	for (auto client : mClients)
 	{
 		xdelete<AsyncEndpoint>(client);
+		client = nullptr;
 	}
 	mClients.clear();
-	XRELEASE(mRecvBuf.buf);
-	mRecvBuf.buf = nullptr;
+
+	while (mSendBuffs.empty() == false)
+	{
+		WSABUF* buf = mSendBuffs.front();
+		mSendBuffs.pop();
+		delete[] buf->buf;
+		buf->buf = nullptr;
+		delete buf;
+		buf = nullptr;
+	}
 }
 
 bool Server::Register(LPAsyncEndpoint socket)
@@ -27,7 +35,6 @@ bool Server::Register(LPAsyncEndpoint socket)
 	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket->ConstGetSocket()), mHandle, 0, 0))
 		return false;
 
-		
 	return true;
 }
 
@@ -35,7 +42,7 @@ bool Server::Dispatch()
 {
 	ULONG_PTR key;
 	DWORD transferred = 0;
-	OverlappedEx* retOver = nullptr;
+	LPOVERLAPPEDEX retOver = nullptr;
 	LPAsyncEndpoint client = nullptr;
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
@@ -49,9 +56,11 @@ bool Server::Dispatch()
 			return true;
 		case IOEvent::RECV:
 			Log("Recv OK!\n");
+			IORecv(client);
 			return true;
 		case IOEvent::SEND:
 			Log("Send OK!\n");
+			IOSend(client);
 			return true;
 		case IOEvent::DISCONNECT:
 			IODisconnect(client);
@@ -62,7 +71,12 @@ bool Server::Dispatch()
 	}
 	else
 	{
-		std::cout << WSAGetLastError() << std::endl;
+		int error = WSAGetLastError();
+		if (error == 258)
+		{
+			Log("Not Notify");
+		}
+		std::cout << error << std::endl;
 	}
 
 	return false;
@@ -104,12 +118,48 @@ auto Server::GetSocket() -> SOCKET
 	return mListener.ConstGetSocket();
 }
 
+auto Server::Send() -> bool
+{
+	WSABUF* sendBuf = nullptr;
+	{
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		if (mSendBuffs.empty() == false)
+		{
+			sendBuf = mSendBuffs.front();
+			mSendBuffs.pop();
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	{
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		for (auto& client : mClients)
+		{
+			client->Send(sendBuf);
+		}
+	}
+	
+	return true;
+}
+
+auto Server::SetRecv(LPAsyncEndpoint client) -> bool
+{
+	if (client->Recv() == false)
+		return false;
+
+	return true;
+}
+
 auto Server::accept() -> void
 {
 	const int32 acceptCount = 1;
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		LPAsyncEndpoint client = xnew<AsyncEndpoint>();
+		ASSERT_CRASH(Register(client));
 		mClients.emplace_back(client);
 		acceptRegister(client);
 	}
@@ -117,14 +167,6 @@ auto Server::accept() -> void
 
 auto Server::acceptRegister(LPAsyncEndpoint client) -> void
 {
-	Register(client);
-
-	if (client->SocketReuseAddr() == false)
-		client->SocketReuseAddr();
-
-	if (client->SocketTcpNoDelay() == false)
-		client->SocketTcpNoDelay();
-
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
 
@@ -136,16 +178,13 @@ auto Server::acceptRegister(LPAsyncEndpoint client) -> void
 			acceptRegister(client);
 		}
 	}
+	setEventAccept(client);
 }
 
-auto Server::setMsg(CHAR* msg, size_t size) -> bool
+auto Server::setMsg(WSABUF* dst, LPAsyncEndpoint src) -> void
 {
-	return memcpy_s(mRecvBuf.buf, mRecvBuf.len, msg, size) == 0;
-}
-
-auto Server::IOConnect(LPAsyncEndpoint client) -> void
-{
-	
+	while (memcpy_s(dst->buf, MAX_BUFF_SIZE, src->GetBufRef().buf, src->GetTransferredBytes()) != 0);
+	dst->len = src->GetTransferredBytes();
 }
 
 auto Server::IOAccept(LPAsyncEndpoint client) -> void
@@ -155,42 +194,47 @@ auto Server::IOAccept(LPAsyncEndpoint client) -> void
 		mListener.SocketAcceptUpdate(client);
 	}
 
-	client->Recv();
+	if (SetRecv(client) == false)
+		SetRecv(client);
+}
+
+auto Server::IORecv(LPAsyncEndpoint src) -> void
+{
+	WSABUF* sendBuf = new WSABUF();
+	sendBuf->buf = static_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
+	setMsg(sendBuf, src);
+	src->GetBufRef().len = MAX_BUFF_SIZE;
+	{
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		mSendBuffs.emplace(sendBuf);
+	}
+	Send();
+}
+
+auto Server::IOSend(LPAsyncEndpoint client) -> void
+{
+	// Send 완료 통보후 다시 Recv로 바꿔서 받을수 있는 준비를 한다.
 	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
-
-	//std::wstring msg{ L"Hello, World!\n" };
-	//IOSend(client, reinterpret_cast<CHAR*>(msg.data()), sizeof(WCHAR) * msg.length());
-}
-
-auto Server::IORecv(LPAsyncEndpoint client) -> void
-{
-	client->Recv();
-	//std::cout << client->GetRecvBufRef().buf << std::endl;
-}
-
-auto Server::IOSend(CHAR* msg, size_t size) -> void
-{
-	
-	if (setMsg(msg, size) == false)
-	{
-		setMsg(msg, size);
-	}
-
-	for (auto& client : mClients)
-	{
-		mListener.Send(client, msg, size);
-	}
 }
 
 
 auto Server::IODisconnect(LPAsyncEndpoint client) -> void
 {
-
+	if (AsyncStream::DisconnectEx(client->ConstGetSocket(), NULL, 0, 0) == false)
+	{
+		int error = WSAGetLastError();
+		std::cerr << "DisconnectEx failed: " << error << std::endl;
+	}
 }
 
 auto Server::Log(const char* msg) -> void
 {
 	std::cout << msg << std::endl;
+}
+
+auto Server::setEventAccept(LPAsyncEndpoint client) -> void
+{
+	client->GetEndpointRef().SetIOEvent(IOEvent::ACCEPT);
 }
 
 

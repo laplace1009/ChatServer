@@ -16,7 +16,7 @@ enum class IOEvent
 typedef struct OverlappedEx : WSAOVERLAPPED
 {
 	IOEvent			ioEvent;
-	AsyncStream*	owner;
+	void*			owner;
 } OVERLAPPEDEX, * LPOVERLAPPEDEX;
 
 class alignas(16) AsyncStream : public Network

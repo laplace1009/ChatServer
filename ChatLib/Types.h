@@ -21,6 +21,4 @@ using LockGuard = std::lock_guard<std::mutex>;
 using String = std::string;
 
 
-
-
 #define _STOMP

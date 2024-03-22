@@ -25,7 +25,7 @@ bool TcpListener::Recv(WSABUF* buf, DWORD* bytes)
 
 bool TcpListener::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	return mListener.Send(buf, bytes, msg, size);
+	return mListener.Send(buf);
 }
 
 auto TcpListener::Accept(TcpEndpoint* client) -> bool

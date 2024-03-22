@@ -10,6 +10,8 @@ public:
 	NetworkEndpoint() : mTransferredBytes{ 0 }
 	{
 		mBuf.buf = reinterpret_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
+		mBuf.len = MAX_BUFF_SIZE;
+		mEndPoint.GetOverlappedRef()->owner = this;
 	}
 	~NetworkEndpoint()
 	{
@@ -38,10 +40,14 @@ public:
 		return mEndPoint.Recv(&mBuf, &mTransferredBytes);
 	}
 
-	auto Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size) -> bool
+	auto Send(WSABUF* sendBuf) -> bool
 	{
-		return mEndPoint.Send(&mBuf, &mTransferredBytes, msg, size);
+		DWORD bytes{ 0 };
+		mEndPoint.Send(sendBuf, &bytes, sendBuf->buf, sendBuf->len);
+
+		return true;
 	}
+		
 
 public:
 	auto ConstGetSocket() const -> const SOCKET
@@ -105,6 +111,7 @@ public:
 	{
 		return mEndPoint.SocketTcpNoDelay();
 	}
+
 private:
 	T mEndPoint;
 	WSABUF mBuf;

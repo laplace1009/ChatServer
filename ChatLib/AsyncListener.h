@@ -28,8 +28,8 @@ public:
 	SOCKADDR_IN&	GetAddrRef()			override;
 
 public:
-	auto SetSocket(SOCKET socket) -> void;
-	auto SetTransferredBytes(DWORD bytes) -> void;
+	auto SetSocket(SOCKET socket)			-> void;
+	auto SetTransferredBytes(DWORD bytes)	-> void;
 
 public:
 	auto GetAsyncStreamRef()						-> AsyncEndpoint&;

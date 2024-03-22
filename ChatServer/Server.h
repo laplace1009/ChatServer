@@ -10,9 +10,9 @@
 #include <vector>
 #include <string>
 
-class Server : public IOCP
+class alignas(64) Server : public IOCP
 {
-	enum
+	enum : uint16
 	{
 		MAX_MEMEBERS = 100,
 	};
@@ -33,22 +33,30 @@ public:
 	auto GetHandle() -> HANDLE;
 	auto GetSocket() -> SOCKET;
 
+public:
+	auto Send() -> bool;
+	auto SetRecv(LPAsyncEndpoint client) -> bool;
+
 private:
-	auto accept()								-> void;
-	auto acceptRegister(LPAsyncEndpoint client)	-> void;
-	auto setMsg(CHAR* msg, size_t size)			-> bool;
-	auto IOConnect(LPAsyncEndpoint client)		-> void;
-	auto IOAccept(LPAsyncEndpoint client)		-> void;
-	auto IORecv(LPAsyncEndpoint client)			-> void;
-	auto IOSend(CHAR* msg, size_t size)			-> void;
-	auto IODisconnect(LPAsyncEndpoint client)	-> void;
-	auto Log(const char* msg)					-> void;
+	auto accept()									-> void;
+	auto acceptRegister(LPAsyncEndpoint client)		-> void;
+	auto setMsg(WSABUF* dst, LPAsyncEndpoint src)	-> void;
+	auto IOAccept(LPAsyncEndpoint client)			-> void;
+	auto IORecv(LPAsyncEndpoint client)				-> void;
+	auto IOSend(LPAsyncEndpoint client)				-> void;
+	auto IODisconnect(LPAsyncEndpoint client)		-> void;
+	auto Log(const char* msg)						-> void;
+	//auto setEventRecv() -> void;
+	auto setEventAccept(LPAsyncEndpoint client) -> void;
+	//auto setEventDisconnect() -> void;
+	//auto setSend() -> void;
 
 private:
 	AsyncListener					mListener;
 	HANDLE							mHandle;
 	std::vector<LPAsyncEndpoint>	mClients;
-	WSABUF							mRecvBuf;
+	std::queue<WSABUF*>				mSendBuffs;
+	ReadWriteLock					mLock;
 	static Atomic<uint32>			mId;
 };
 
