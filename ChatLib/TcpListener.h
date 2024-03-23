@@ -1,20 +1,21 @@
 #pragma once
 #include "TcpStream.h"
+#include "Error.h"
 #include "Listener.h"
 #include "NetworkEndpoint.h"
 
 class TcpListener : public Listener
 {
 public:
-	bool BindAny(uint16 port)										override;
-	bool Bind(std::string addr, uint16 port)						override;
-	bool Accept()													override;
-	bool Recv(WSABUF* buf, DWORD* bytes)							override;
-	bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
+	Error BindAny(uint16 port)										override;
+	Error Bind(std::string addr, uint16 port)						override;
+	Error Accept()													override;
+	Error Recv(WSABUF* buf, DWORD* bytes)							override;
+	Error Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
 
 public:
-	auto Accept(TcpEndpoint* client) -> bool;
-	auto Send(TcpEndpoint* dest, CHAR* msg, size_t size) -> bool;
+	auto Accept(TcpEndpoint* client) -> Error;
+	auto Send(TcpEndpoint* dest, CHAR* msg, size_t size) -> Error;
 
 public:
 	const SOCKET ConstGetSocket() const	override;
@@ -27,4 +28,3 @@ public:
 private:
 	TcpEndpoint mListener;
 };
-

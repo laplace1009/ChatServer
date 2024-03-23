@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "Error.h"
 #include "TcpStream.h"
 #include "AsyncStream.h"
 
@@ -20,32 +21,31 @@ public:
 	}
 
 public:
-	auto BindAny(uint16 port) -> bool
+	auto BindAny(uint16 port) -> Error
 	{
 		return mEndPoint.BindAny(port);
 	}
 
-	auto Bind(String addr, uint16 port) -> bool
+	auto Bind(String addr, uint16 port) -> Error
 	{
 		return mEndPoint.Bind(addr, port);
 	}
 
-	auto Connect() -> bool
+	auto Connect() -> Error
 	{
 		return mEndPoint.Connect(&mTransferredBytes);
 	}
 
-	auto Recv() -> bool
+	auto Recv() -> Error
 	{
 		return mEndPoint.Recv(&mBuf, &mTransferredBytes);
 	}
 
-	auto Send(WSABUF* sendBuf) -> bool
+	auto Send(WSABUF* sendBuf) -> Error
 	{
 		DWORD bytes{ 0 };
-		mEndPoint.Send(sendBuf, &bytes, sendBuf->buf, sendBuf->len);
-
-		return true;
+		
+		return mEndPoint.Send(sendBuf, &bytes, sendBuf->buf, sendBuf->len);
 	}
 		
 
@@ -97,17 +97,17 @@ public:
 	}
 
 public:
-	auto SocketConnectUpdate() -> bool
+	auto SocketConnectUpdate() -> Error
 	{
 		return mEndPoint.SocketConnectUpdate();
 	}
 
-	auto SocketReuseAddr() -> bool
+	auto SocketReuseAddr() -> Error
 	{
 		return mEndPoint.SocketReuseAddr();
 	}
 
-	auto SocketTcpNoDelay() -> bool
+	auto SocketTcpNoDelay() -> Error
 	{
 		return mEndPoint.SocketTcpNoDelay();
 	}

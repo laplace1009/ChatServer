@@ -6,34 +6,34 @@ TcpStream::TcpStream() : mSocket{0}
 	ZeroMemory(&mAddr, sizeof(mAddr));
 }
 
-bool TcpStream::BindAny(uint16 port)
+Error TcpStream::BindAny(uint16 port)
 {
 	mAddr.sin_family = AF_INET;
 	mAddr.sin_port = htons(port);
 	mAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
+	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0 ? Error::OK : Error::NET_BIND_ERROR;
 }
 
-bool TcpStream::Bind(std::string addr, uint16 port)
+Error TcpStream::Bind(std::string addr, uint16 port)
 {
 	TcpStream::SetAddr(addr, port);
-	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
+	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0 ? Error::OK : Error::NET_BIND_ERROR;
 }
 
 
-auto TcpStream::Connect(DWORD* bytes) -> bool
+Error TcpStream::Connect(DWORD* bytes)
 {
-	return connect(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0;
+	return connect(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr)) == 0 ? Error::OK : Error::NET_BIND_ERROR;
 }
 
-bool TcpStream::Recv(WSABUF* buf, DWORD* bytes)
+Error TcpStream::Recv(WSABUF* buf, DWORD* bytes)
 {
-	return recv(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR;
+	return recv(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR ? Error::OK : Error::NET_RECV_ERROR;
 }
 
-bool TcpStream::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
+Error TcpStream::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	return send(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR;
+	return send(mSocket, buf->buf, buf->len, 0) != SOCKET_ERROR ? Error::OK : Error::NET_SEND_ERROR;
 }
 
 const SOCKET TcpStream::ConstGetSocket() const
@@ -58,18 +58,18 @@ auto TcpStream::SetAddr(std::string addr, uint16 port) -> void
 	inet_pton(AF_INET, addr.c_str(), &mAddr);
 }
 
-auto TcpStream::SocketConnectUpdate() -> bool
+auto TcpStream::SocketConnectUpdate() -> Error
 {
 	return SetSocketOpt<int>(this, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
 }
 
-auto TcpStream::SocketReuseAddr() -> bool
+auto TcpStream::SocketReuseAddr() -> Error
 {
 	bool flag{ true };
 	return SetSocketOpt<bool>(this, SO_REUSEADDR, &flag, sizeof(bool));
 }
 
-auto TcpStream::SocketTcpNoDelay() -> bool
+auto TcpStream::SocketTcpNoDelay() -> Error
 {
 	bool flag{ true };
 	return SetSocketOpt<bool>(this, TCP_NODELAY, &flag, sizeof(bool));

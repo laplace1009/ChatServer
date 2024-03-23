@@ -12,8 +12,8 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OVERLAPPEDEX>() }, mSocket{ Creat
 	ZeroMemory(mOverlapped, sizeof(OVERLAPPEDEX));
 	ZeroMemory(&mAddr, sizeof(mAddr));
 	mOverlapped->ioEvent = IOEvent::CONNECT;
-	ASSERT_CRASH(SocketReuseAddr());
-	ASSERT_CRASH(SocketTcpNoDelay());
+	ASSERT_CRASH(SocketReuseAddr() != Error::OK);
+	ASSERT_CRASH(SocketTcpNoDelay() != Error::OK);
 }
 
 AsyncStream::~AsyncStream() noexcept
@@ -21,75 +21,79 @@ AsyncStream::~AsyncStream() noexcept
 	xdelete(mOverlapped);
 }
 
-auto AsyncStream::Init() -> bool
+auto AsyncStream::Init() -> Error
 {	
 	if (bindWsaIoctl(WSAID_CONNECTEX, reinterpret_cast<LPVOID*>(&ConnectEx)) == false)
-		return false;
+		return Error::NET_BIND_LPFN_ERROR;
 
 	if (bindWsaIoctl(WSAID_DISCONNECTEX, reinterpret_cast<LPVOID*>(&DisconnectEx)) == false)
-		return false;
+		return Error::NET_BIND_LPFN_ERROR;
 
 	if (bindWsaIoctl(WSAID_ACCEPTEX, reinterpret_cast<LPVOID*>(&AcceptEx)) == false)
-		return false;
+		return Error::NET_BIND_LPFN_ERROR;
 
 	if (bindWsaIoctl(WSAID_GETACCEPTEXSOCKADDRS, reinterpret_cast<LPVOID*>(&GetAcceptExSockaddrs)) == false)
-		return false;
+		return Error::NET_BIND_LPFN_ERROR;
 	
-	return true;
+	return Error::OK;
 }
 
-bool AsyncStream::BindAny(uint16 port)
+Error AsyncStream::BindAny(uint16 port)
 {
 	mAddr.sin_family = AF_INET;
 	mAddr.sin_port = htons(port);
 	mAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0;
+	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0)
+		return Error::OK;
+
+	return Error::NET_BIND_ERROR;
 }
 
-bool AsyncStream::Bind(std::string addr, uint16 port)
+Error AsyncStream::Bind(std::string addr, uint16 port)
 {
 	SetAddr(addr, port);
-	return bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0;
+	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0)
+		return Error::OK;
+
+	return Error::NET_BIND_ERROR;
 }
 
-bool AsyncStream::Connect(DWORD* bytes)
+Error AsyncStream::Connect(DWORD* bytes)
 {
-	return AsyncStream::ConnectEx(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr), nullptr, 0, bytes, static_cast<LPOVERLAPPED>(mOverlapped));
+	return AsyncStream::ConnectEx(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr), nullptr, 0, bytes, static_cast<LPOVERLAPPED>(mOverlapped)) ? Error::OK : Error::NET_CONNECT_ERROR;
 }
 
-bool AsyncStream::Recv(WSABUF* buf, DWORD* bytes)
+Error AsyncStream::Recv(WSABUF* buf, DWORD* bytes)
 {
-	DWORD flags = 0;	
-	mOverlapped->ioEvent = IOEvent::RECV;
+	DWORD flags = 0;
 	if (WSARecv(mSocket, buf, 1, bytes, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
 		{
 			std::cout << error << std::endl;
-			return false;
+			return Error::NET_RECV_ERROR;
 		}
 			
 	}
 
-	return true;
+	return Error::OK;
 }
 
-bool AsyncStream::Send(WSABUF* sendBuf, DWORD* bytes, CHAR* msg, size_t size)
+Error AsyncStream::Send(WSABUF* sendBuf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	mOverlapped->ioEvent = IOEvent::SEND;
 	if (WSASend(mSocket, sendBuf, 1, bytes, 0, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
 		{
 			std::cout << error << std::endl;
-			return false;
+			return Error::NET_SEND_ERROR;
 		}
 			
 	}
 
-	return true;
+	return Error::OK;
 }
 
 const SOCKET AsyncStream::ConstGetSocket() const
@@ -147,18 +151,18 @@ auto AsyncStream::bindWsaIoctl(GUID guid, LPVOID* fn) -> bool
 	return SOCKET_ERROR != WSAIoctl(dummySocket, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid, sizeof(guid), fn, sizeof(*fn), OUT & bytes, NULL, NULL);
 }
 
-auto AsyncStream::SocketConnectUpdate() -> bool
+auto AsyncStream::SocketConnectUpdate() -> Error
 {
 	return SetSocketOpt<int>(this, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
 }
 
-auto AsyncStream::SocketReuseAddr() -> bool
+auto AsyncStream::SocketReuseAddr() -> Error
 {
 	bool flag{ true };
 	return SetSocketOpt<bool>(this, SO_REUSEADDR, &flag, sizeof(bool));
 }
 
-auto AsyncStream::SocketTcpNoDelay() -> bool
+auto AsyncStream::SocketTcpNoDelay() -> Error
 {
 	bool flag{ true };
 	return SetSocketOpt<bool>(this, TCP_NODELAY, &flag, sizeof(bool));

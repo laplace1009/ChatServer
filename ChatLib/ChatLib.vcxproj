@@ -160,6 +160,7 @@
     <ClInclude Include="BaseAllocator.h" />
     <ClInclude Include="Container.h" />
     <ClInclude Include="CorePch.h" />
+    <ClInclude Include="Error.h" />
     <ClInclude Include="FixedSizeMemory.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="IOCP.h" />

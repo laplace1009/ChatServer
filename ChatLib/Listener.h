@@ -7,6 +7,6 @@ public:
 	virtual ~Listener() = default;
 
 public:									
-	virtual bool Accept() = 0;
+	virtual Error Accept() = 0;
 };
 

@@ -11,16 +11,16 @@ public:
 	~AsyncListener() noexcept override = default;
 
 public:
-	bool BindAny(uint16 port)												override;
-	bool Bind(std::string addr, uint16 port)								override;
-	bool Accept()															override;
-	UN_USED bool Connect(DWORD* bytes)										override;
-	bool Recv(WSABUF* buf, DWORD* bytes)									override;
-	UN_USED bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
+	Error BindAny(uint16 port)												override;
+	Error Bind(std::string addr, uint16 port)								override;
+	Error Accept()															override;
+	UN_USED Error Connect(DWORD* bytes)										override;
+	Error Recv(WSABUF* buf, DWORD* bytes)									override;
+	UN_USED Error Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
 
 public:
-	auto Accept(AsyncEndpoint* client)						-> bool;
-	auto Send(AsyncEndpoint* dest, CHAR* msg, size_t size)	-> bool;
+	auto Accept(AsyncEndpoint* client)						-> Error;
+	auto Send(AsyncEndpoint* dest, CHAR* msg, size_t size)	-> Error;
 
 public:
 	const SOCKET	ConstGetSocket() const	override;
@@ -33,7 +33,7 @@ public:
 
 public:
 	auto GetAsyncStreamRef()						-> AsyncEndpoint&;
-	auto SocketAcceptUpdate(AsyncEndpoint* client)	-> bool;
+	auto SocketAcceptUpdate(AsyncEndpoint* client)	-> Error;
 	auto GetTransferredBytesRef()					-> DWORD&;
 
 private:

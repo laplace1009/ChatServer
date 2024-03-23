@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "Error.h"
 
 enum
 {
@@ -12,11 +13,11 @@ public:
 	virtual ~Network() = default;
 
 public:
-	virtual bool BindAny(uint16)										 = 0;
-	virtual bool Bind(std::string, uint16)								 = 0;
-	virtual bool Connect(DWORD* bytes)									 = 0;
-	virtual bool Recv(WSABUF* buf, DWORD* bytes)						 = 0;
-	virtual bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size) = 0;
+	virtual Error BindAny(uint16)											= 0;
+	virtual Error Bind(std::string, uint16)									= 0;
+	virtual Error Connect(DWORD* bytes)										= 0;
+	virtual Error Recv(WSABUF* buf, DWORD* bytes)							= 0;
+	virtual Error Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	= 0;
 
 public:
 	virtual const SOCKET ConstGetSocket() const = 0;
@@ -24,14 +25,11 @@ public:
 	virtual SOCKADDR_IN& GetAddrRef()			= 0;
 };
 
-inline bool NetworkInit()
+inline Error NetworkInit()
 {
 	WSADATA wsa;
 
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return false;
-
-	return true;
+	return WSAStartup(MAKEWORD(2, 2), &wsa) != 0 ? Error::OK : Error::NET_WSA_INIT_ERROR;
 }
 
 inline SOCKET CreateSocket() 
@@ -40,7 +38,7 @@ inline SOCKET CreateSocket()
 }
 
 template<typename T>
-static inline auto SetSocketOpt(Network* stream, int optName, T* optVal, size_t optLen) -> bool
+static inline auto SetSocketOpt(Network* stream, int optName, T* optVal, size_t optLen) -> Error
 {
-	return ::setsockopt(stream->ConstGetSocket(), SOL_SOCKET, optName, reinterpret_cast<const char*>(optVal), static_cast<int>(optLen)) != SOCKET_ERROR;
+	return ::setsockopt(stream->ConstGetSocket(), SOL_SOCKET, optName, reinterpret_cast<const char*>(optVal), static_cast<int>(optLen)) != SOCKET_ERROR ? Error::OK : Error::NET_SOCKET_OPT_ERROR;
 }

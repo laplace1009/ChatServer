@@ -7,7 +7,7 @@ Server::Server()
 {
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
-	ASSERT_CRASH(AsyncStream::Init());
+	ASSERT_CRASH(AsyncStream::Init() != Error::OK);
 }
 
 Server::~Server() noexcept
@@ -30,15 +30,15 @@ Server::~Server() noexcept
 	}
 }
 
-bool Server::Register(LPAsyncEndpoint socket)
+Error Server::Register(LPAsyncEndpoint socket)
 {
 	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket->ConstGetSocket()), mHandle, 0, 0))
-		return false;
+		return Error::IOCP_REGISTER_ERROR;
 
-	return true;
+	return Error::OK;
 }
 
-bool Server::Dispatch()
+Error Server::Dispatch()
 {
 	ULONG_PTR key;
 	DWORD transferred = 0;
@@ -47,65 +47,47 @@ bool Server::Dispatch()
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
 		client = reinterpret_cast<LPAsyncEndpoint>(retOver->owner);
-		std::cout << "Client sock: " << client->ConstGetSocket() << std::endl;
 
-		switch (client->GetEndpointRef().GetIOEvent())
-		{
-		case IOEvent::ACCEPT:
-			IOAccept(client);
-			return true;
-		case IOEvent::RECV:
-			Log("Recv OK!\n");
-			IORecv(client);
-			return true;
-		case IOEvent::SEND:
-			Log("Send OK!\n");
-			IOSend(client);
-			return true;
-		case IOEvent::DISCONNECT:
-			IODisconnect(client);
-			return true;
-		default:
-			return true;
-		}
+		doIOAction(client);
 	}
 	else
 	{
-		int error = WSAGetLastError();
-		if (error == 258)
+		int32 error = WSAGetLastError();
+		switch (error)
 		{
-			Log("Not Notify");
+		case WAIT_TIMEOUT:
+			return Error::IOCP_DISPATCH_ERROR;
+		default:
+			
 		}
-		std::cout << error << std::endl;
 	}
-
-	return false;
+	return Error::OK;
 }
 
-auto Server::Run(uint16 port) -> bool
+auto Server::Run(uint16 port) -> Error
 {
-	if (false == mListener.BindAny(port))
-		return false;
+	if (Error::NET_BIND_ERROR == mListener.BindAny(port))
+		return Error::NET_BIND_ERROR;
 
-	if (false == Register(&mListener.GetAsyncStreamRef()))
-		return false;
+	if (Error::IOCP_REGISTER_ERROR == Register(&mListener.GetAsyncStreamRef()))
+		return Error::IOCP_REGISTER_ERROR;
 
 	accept();
 
-	return true;
+	return Error::OK;
 }
 
-auto Server::Run(std::string addr, uint16 port) -> bool
+auto Server::Run(std::string addr, uint16 port) -> Error
 {
-	if (false == mListener.Bind(addr, port))
-		return false;
+	if (Error::NET_BIND_ERROR == mListener.Bind(addr, port))
+		return Error::NET_BIND_ERROR;
 
-	if (false == Register(&mListener.GetAsyncStreamRef()))
-		return false;
+	if (Error::IOCP_REGISTER_ERROR == Register(&mListener.GetAsyncStreamRef()))
+		return Error::IOCP_REGISTER_ERROR;
 
 	accept();
 
-	return true;
+	return Error::OK;
 }
 
 auto Server::GetHandle() -> HANDLE
@@ -118,39 +100,43 @@ auto Server::GetSocket() -> SOCKET
 	return mListener.ConstGetSocket();
 }
 
-auto Server::Send() -> bool
+auto Server::Send() -> Error
 {
-	WSABUF* sendBuf = nullptr;
+	while (mSendBuffs.empty() == false)
 	{
-		WriteLockGuard<ReadWriteLock&> g(mLock);
-		if (mSendBuffs.empty() == false)
+		WSABUF* sendBuf = nullptr;
 		{
-			sendBuf = mSendBuffs.front();
-			mSendBuffs.pop();
+			WriteLockGuard<ReadWriteLock&> g(mLock);
+			if (mSendBuffs.empty() == false)
+			{
+				sendBuf = mSendBuffs.front();
+				mSendBuffs.pop();
+			}
+			else
+			{
+				return Error::SERVER_EMPTY_SENDBUFFS;
+			}
 		}
-		else
-		{
-			return false;
-		}
-	}
 
-	{
-		WriteLockGuard<ReadWriteLock&> g(mLock);
-		for (auto& client : mClients)
 		{
-			client->Send(sendBuf);
+			WriteLockGuard<ReadWriteLock&> g(mLock);
+			for (auto& client : mClients)
+			{
+				client->Send(sendBuf);
+			}
 		}
 	}
 	
-	return true;
+	return Error::OK;
 }
 
-auto Server::SetRecv(LPAsyncEndpoint client) -> bool
+auto Server::SetRecv(LPAsyncEndpoint client) -> Error
 {
-	if (client->Recv() == false)
-		return false;
+	if (client->Recv() == Error::NET_RECV_ERROR)
+		return Error::NET_RECV_ERROR;
+	setEventRecv(client);
 
-	return true;
+	return Error::OK;
 }
 
 auto Server::accept() -> void
@@ -159,7 +145,7 @@ auto Server::accept() -> void
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		LPAsyncEndpoint client = xnew<AsyncEndpoint>();
-		ASSERT_CRASH(Register(client));
+		ASSERT_CRASH(Register(client) != Error::IOCP_REGISTER_ERROR);
 		mClients.emplace_back(client);
 		acceptRegister(client);
 	}
@@ -176,6 +162,7 @@ auto Server::acceptRegister(LPAsyncEndpoint client) -> void
 		if (error != WSA_IO_PENDING)
 		{
 			acceptRegister(client);
+			return;
 		}
 	}
 	setEventAccept(client);
@@ -187,49 +174,9 @@ auto Server::setMsg(WSABUF* dst, LPAsyncEndpoint src) -> void
 	dst->len = src->GetTransferredBytes();
 }
 
-auto Server::IOAccept(LPAsyncEndpoint client) -> void
+auto Server::doIOAction(LPAsyncEndpoint client) -> void
 {
-	if (mListener.SocketAcceptUpdate(client) == false)
-	{
-		mListener.SocketAcceptUpdate(client);
-	}
-
-	if (SetRecv(client) == false)
-		SetRecv(client);
-}
-
-auto Server::IORecv(LPAsyncEndpoint src) -> void
-{
-	WSABUF* sendBuf = new WSABUF();
-	sendBuf->buf = static_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
-	setMsg(sendBuf, src);
-	src->GetBufRef().len = MAX_BUFF_SIZE;
-	{
-		WriteLockGuard<ReadWriteLock&> g(mLock);
-		mSendBuffs.emplace(sendBuf);
-	}
-	Send();
-}
-
-auto Server::IOSend(LPAsyncEndpoint client) -> void
-{
-	// Send 완료 통보후 다시 Recv로 바꿔서 받을수 있는 준비를 한다.
-	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
-}
-
-
-auto Server::IODisconnect(LPAsyncEndpoint client) -> void
-{
-	if (AsyncStream::DisconnectEx(client->ConstGetSocket(), NULL, 0, 0) == false)
-	{
-		int error = WSAGetLastError();
-		std::cerr << "DisconnectEx failed: " << error << std::endl;
-	}
-}
-
-auto Server::Log(const char* msg) -> void
-{
-	std::cout << msg << std::endl;
+	client->GetEndpointRef().GetIOEvent();
 }
 
 auto Server::setEventAccept(LPAsyncEndpoint client) -> void
@@ -237,42 +184,79 @@ auto Server::setEventAccept(LPAsyncEndpoint client) -> void
 	client->GetEndpointRef().SetIOEvent(IOEvent::ACCEPT);
 }
 
+auto Server::setEventRecv(LPAsyncEndpoint client) -> void
+{
+	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
+}
 
-//Iocp::~Iocp() noexcept
+auto Server::setEventSend(LPAsyncEndpoint client) -> void
+{
+	client->GetEndpointRef().SetIOEvent(IOEvent::SEND);
+}
+
+auto Server::afterIOAcceptEvent(LPAsyncEndpoint client) -> void
+{
+	setEventAccept(client);
+	SetRecv(client);
+}
+
+auto Server::afterIORecvEvent(LPAsyncEndpoint client) -> void
+{
+	WSABUF* buf = xnew<WSABUF>();
+	buf->buf = client->GetBufRef().buf;
+	buf->len = client->GetTransferredBytes();
+	mSendBuffs.emplace(&buf);
+	Send();
+}
+
+auto Server::afterIOSendEvent(LPAsyncEndpoint client) -> void
+{
+	setEventRecv(client);
+	client->GetTransferredBytesRef() = 0;
+}
+
+auto Server::afterIODisconnect(LPAsyncEndpoint client) -> void
+{
+
+}
+
+//auto Server::IOAccept(LPAsyncEndpoint client) -> void
 //{
-//	CloseHandle(mHandle);
+//	if (mListener.SocketAcceptUpdate(client) == Error::NET_SOCKET_OPT_ERROR)
+//	{
+//		mListener.SocketAcceptUpdate(client);
+//	}
+//
+//	//if (SetRecv(client) == false)
+//	//	SetRecv(client);
 //}
 //
-//auto Iocp::Init() -> bool
+//auto Server::IORecv(LPAsyncEndpoint src) -> void
 //{
-//	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-//	if (mHandle == NULL)
-//		return false;
-//
-//	return true;
+//	WSABUF* sendBuf = new WSABUF();
+//	sendBuf->buf = static_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
+//	setMsg(sendBuf, src);
+//	src->GetBufRef().len = MAX_BUFF_SIZE;
+//	{
+//		WriteLockGuard<ReadWriteLock&> g(mLock);
+//		mSendBuffs.emplace(sendBuf);
+//	}
+//	Send();
 //}
 //
-//auto Iocp::GetHandle() -> HANDLE
+//auto Server::IOSend(LPAsyncEndpoint client) -> void
 //{
-//	return mHandle;
+//	// Send 완료 통보후 다시 Recv로 바꿔서 받을수 있는 준비를 한다.
+//	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
 //}
 //
-//auto Iocp::SetHandle(HANDLE h) -> void
+//
+//auto Server::IODisconnect(LPAsyncEndpoint client) -> void
 //{
-//	mHandle = h;
+//	if (AsyncStream::DisconnectEx(client->ConstGetSocket(), NULL, 0, 0) == false)
+//	{
+//		int error = WSAGetLastError();
+//		std::cerr << "DisconnectEx failed: " << error << std::endl;
+//	}
 //}
-//
-//auto Iocp::Register(AsyncStream& stream) -> bool
-//{
-//	if (NULL == CreateIoCompletionPort(reinterpret_cast<HANDLE>(stream.ConstGetSocket()), mHandle, reinterpret_cast<ULONG_PTR>(&stream), 0))
-//		return false;
-//
-//	return true;
-//}
-//
-//auto Iocp::Dispatch(uint32 timeout) -> bool
-//{
-//
-//
-//	return true;
-//}
+

@@ -30,6 +30,12 @@
     <Filter Include="Main">
       <UniqueIdentifier>{34eb57f1-8260-42f1-83b3-314ea7fb70f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Error">
+      <UniqueIdentifier>{b63f71f3-817e-4dad-8559-edad57e1f214}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Worker">
+      <UniqueIdentifier>{7cfefd26-6e39-48cb-925b-a64287b043a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TLS.h">
@@ -118,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="NetworkEndpoint.h">
       <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Error.h">
+      <Filter>Error</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

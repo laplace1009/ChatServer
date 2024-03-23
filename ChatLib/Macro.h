@@ -3,6 +3,8 @@
 
 // 참조나 포인터로 매개변수값 변경시 붙여주는 태그
 #define OUT
+// 규격만 맞추고 사용하지 않는 매개변수 앞에 붙여 주는 태그
+#define NOT_USED
 
 // 기본적인 [[nodiscard]] 매크로
 #define NODISCARD [[nodiscard]]

@@ -3,23 +3,26 @@
 
 AsyncListener::AsyncListener()
 {
-	ASSERT_CRASH(AsyncStream::Init());
+	ASSERT_CRASH(AsyncStream::Init() != Error::OK);
 }
 
-bool AsyncListener::BindAny(uint16 port)
+Error AsyncListener::BindAny(uint16 port)
 {
-	if (mListener.BindAny(port) == false)
-		return false;
+	if (mListener.BindAny(port) == Error::NET_BIND_ERROR)
+		return Error::NET_BIND_ERROR;
 
-	return ::listen(mListener.GetEndpointRef().ConstGetSocket(), SOMAXCONN) != SOCKET_ERROR;
+	return ::listen(mListener.GetEndpointRef().ConstGetSocket(), SOMAXCONN) != SOCKET_ERROR ? Error::OK : Error::NET_LISTEN_ERROR;
 }
 
-bool AsyncListener::Bind(std::string addr, uint16 port)
+Error AsyncListener::Bind(std::string addr, uint16 port)
 {
-	return mListener.Bind(addr, port);
+	if (mListener.Bind(addr, port) == Error::NET_BIND_ERROR)
+		return Error::NET_BIND_ERROR;
+
+	return ::listen(mListener.GetEndpointRef().ConstGetSocket(), SOMAXCONN) != SOCKET_ERROR ? Error::OK : Error::NET_LISTEN_ERROR;
 }
 
-bool AsyncListener::Accept()
+Error AsyncListener::Accept()
 {
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
@@ -29,29 +32,34 @@ bool AsyncListener::Accept()
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
 		{
-
+			return Error::NET_ACCEPT_ERROR;
 		}
 	}
 
-	return true;
+	return Error::OK;
 }
 
-bool AsyncListener::Connect(DWORD* bytes)
+Error AsyncListener::Connect(DWORD* bytes)
 {
-	return true;
+	return Error::OK;
 }
 
-bool AsyncListener::Recv(WSABUF* buf, DWORD* bytes)
+Error AsyncListener::Recv(WSABUF* buf, DWORD* bytes)
 {
 	return mListener.Recv();
 }
 
-bool AsyncListener::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
+Error AsyncListener::Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)
 {
-	return WSASend(mListener.GetEndpointRef().ConstGetSocket(), buf, 1, bytes, 0, mListener.GetEndpointRef().GetOverlappedRef(), NULL);
+	if (false == WSASend(mListener.GetEndpointRef().ConstGetSocket(), buf, 1, bytes, 0, mListener.GetEndpointRef().GetOverlappedRef(), NULL))
+	{
+		return Error::NET_SEND_ERROR;
+	}
+
+	return Error::OK;
 }
 
-auto AsyncListener::Accept(AsyncEndpoint* client) -> bool
+auto AsyncListener::Accept(AsyncEndpoint* client) -> Error
 {
 	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
 	DWORD recvBytes{ 0 };
@@ -61,16 +69,16 @@ auto AsyncListener::Accept(AsyncEndpoint* client) -> bool
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)
 		{
-
+			return Error::NET_ACCEPT_ERROR;
 		}
 	}
 
-	return true;
+	return Error::OK;
 }
 
-auto AsyncListener::Send(AsyncEndpoint* dest, CHAR* msg, size_t size) -> bool
+auto AsyncListener::Send(AsyncEndpoint* dest, CHAR* msg, size_t size)-> Error
 {
-	return SOCKET_ERROR != WSASend(dest->GetEndpointRef().ConstGetSocket(), &mListener.GetBufRef(), 1, &mListener.GetTransferredBytesRef(), 0, mListener.GetEndpointRef().GetOverlappedRef(), NULL);
+	return SOCKET_ERROR != WSASend(dest->GetEndpointRef().ConstGetSocket(), &mListener.GetBufRef(), 1, &mListener.GetTransferredBytesRef(), 0, mListener.GetEndpointRef().GetOverlappedRef(), NULL) ? Error::OK : Error::NET_SEND_ERROR;
 }
 
 
@@ -109,7 +117,7 @@ auto AsyncListener::GetAsyncStreamRef() -> AsyncEndpoint&
 	return mListener;
 }
 
-auto AsyncListener::SocketAcceptUpdate(AsyncEndpoint* client) -> bool
+auto AsyncListener::SocketAcceptUpdate(AsyncEndpoint* client) -> Error
 {
 	return SetSocketOpt<SOCKET>(&client->GetEndpointRef(), SO_UPDATE_ACCEPT_CONTEXT, &mListener.GetEndpointRef().GetSocketRef(), sizeof(mListener.GetEndpointRef().ConstGetSocket()));
 }

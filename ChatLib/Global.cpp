@@ -2,7 +2,7 @@
 #include "Global.h"
 #include "Memory.h"
 #include "MultiSizeMemory.h"
-#include  "Thread.h"
+#include "Thread.h"
 
 MultiSizeMemory* GMemory = nullptr;
 Thread* GThreads = nullptr;
@@ -15,7 +15,7 @@ public:
 		GMemory = new MultiSizeMemory();
 		GThreads = new Thread();
 	}
-
+	
 	~Global()
 	{
 		delete GMemory;

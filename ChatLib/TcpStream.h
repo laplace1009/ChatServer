@@ -12,11 +12,11 @@ public:
 	~TcpStream() noexcept override = default;
 	
 public:
-	bool BindAny(uint16 port)										override;
-	bool Bind(std::string addr, uint16 port)						override;
-	bool Connect(DWORD* bytes)										override;
-	bool Recv(WSABUF* buf, DWORD* bytes)							override;
-	bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
+	Error BindAny(uint16 port)										override;
+	Error Bind(std::string addr, uint16 port)						override;
+	Error Connect(DWORD* bytes)										override;
+	Error Recv(WSABUF* buf, DWORD* bytes)							override;
+	Error Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
 
 public:
 	const SOCKET	ConstGetSocket() const	override;
@@ -25,9 +25,9 @@ public:
 
 public:
 	auto SetAddr(std::string addr, uint16 port) -> void;
-	auto SocketConnectUpdate() -> bool;
-	auto SocketReuseAddr() -> bool;
-	auto SocketTcpNoDelay() -> bool;
+	auto SocketConnectUpdate() -> Error;
+	auto SocketReuseAddr() -> Error;
+	auto SocketTcpNoDelay() -> Error;
 	
 private:
 	SOCKET		mSocket;

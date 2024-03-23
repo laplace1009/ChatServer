@@ -1,6 +1,7 @@
 #pragma once
 #include "Types.h"
 #include "IOCP.h"
+#include "Error.h"
 #include "ReadWriteLock.h"
 #include "ReadLockGuard.h"
 #include "WriteLockGuard.h"
@@ -22,41 +23,42 @@ public:
 	~Server() noexcept;
 
 public:
-	NODISCARD bool Register(LPAsyncEndpoint socket)	override;
-	NODISCARD bool Dispatch()						override;
+	NODISCARD Error Register(LPAsyncEndpoint socket)	override;
+	NODISCARD Error Dispatch()							override;
 
 public:
-	NODISCARD auto Run(uint16)							-> bool;
-	NODISCARD auto Run(std::string addr, uint16 port)	-> bool;
+	NODISCARD auto Run(uint16)							-> Error;
+	NODISCARD auto Run(std::string addr, uint16 port)	-> Error;
 
 public:
 	auto GetHandle() -> HANDLE;
 	auto GetSocket() -> SOCKET;
 
 public:
-	auto Send() -> bool;
-	auto SetRecv(LPAsyncEndpoint client) -> bool;
+	auto Send() -> Error;
+	auto SetRecv(LPAsyncEndpoint client) -> Error;
 
 private:
 	auto accept()									-> void;
 	auto acceptRegister(LPAsyncEndpoint client)		-> void;
 	auto setMsg(WSABUF* dst, LPAsyncEndpoint src)	-> void;
-	auto IOAccept(LPAsyncEndpoint client)			-> void;
-	auto IORecv(LPAsyncEndpoint client)				-> void;
-	auto IOSend(LPAsyncEndpoint client)				-> void;
-	auto IODisconnect(LPAsyncEndpoint client)		-> void;
-	auto Log(const char* msg)						-> void;
-	//auto setEventRecv() -> void;
-	auto setEventAccept(LPAsyncEndpoint client) -> void;
-	//auto setEventDisconnect() -> void;
-	//auto setSend() -> void;
+	auto doIOAction(LPAsyncEndpoint client)			-> void;
+	auto setEventAccept(LPAsyncEndpoint client)		-> void;
+	auto setEventRecv(LPAsyncEndpoint client)		-> void;
+	auto setEventSend(LPAsyncEndpoint client)		-> void;
+	auto afterIOAcceptEvent(LPAsyncEndpoint client) -> void;
+	auto afterIORecvEvent(LPAsyncEndpoint client)	-> void;
+	auto afterIOSendEvent(LPAsyncEndpoint client)	-> void;
+	auto afterIODisconnect(LPAsyncEndpoint client)	-> void;
 
 private:
-	AsyncListener					mListener;
-	HANDLE							mHandle;
-	std::vector<LPAsyncEndpoint>	mClients;
-	std::queue<WSABUF*>				mSendBuffs;
-	ReadWriteLock					mLock;
-	static Atomic<uint32>			mId;
+	AsyncListener										mListener;
+	HANDLE												mHandle;
+	ReadWriteLock										mLock;
+	std::queue<WSABUF*>									mSendBuffs;
+	std::vector<LPAsyncEndpoint>						mClients;
+	
+private:
+	static Atomic<uint32>								mId;
 };
 

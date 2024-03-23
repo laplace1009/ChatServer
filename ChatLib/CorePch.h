@@ -18,6 +18,7 @@
 #include <thread>
 #include <type_traits>
 #include <queue>
+#include <functional>
 
 #include <Windows.h>
 #include <WinSock2.h>

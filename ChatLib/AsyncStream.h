@@ -1,6 +1,7 @@
 #pragma once
 #include "Network.h"
 #include "Memory.h"
+#include "Error.h"
 
 class AsyncStream;
 
@@ -32,14 +33,14 @@ public:
 	~AsyncStream() noexcept override;
 
 public:
-	static auto Init() -> bool;
+	static auto Init() -> Error;
 
 public:
-	bool BindAny(uint16 port)										override;
-	bool Bind(std::string addr, uint16 port)						override;
-	bool Connect(DWORD* bytes)										override;
-	bool Recv(WSABUF* buf, DWORD* bytes)							override;
-	bool Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
+	Error BindAny(uint16 port)										override;
+	Error Bind(std::string addr, uint16 port)						override;
+	Error Connect(DWORD* bytes)										override;
+	Error Recv(WSABUF* buf, DWORD* bytes)							override;
+	Error Send(WSABUF* buf, DWORD* bytes, CHAR* msg, size_t size)	override;
 
 public:
 	const	SOCKET ConstGetSocket() const	override;
@@ -52,9 +53,9 @@ public:
 	auto GetIOEvent()							-> IOEvent;
 	auto SetIOEvent(IOEvent event)				-> void;
 	auto SetAddr(std::string addr, uint16 port) -> bool;
-	auto SocketConnectUpdate()					-> bool;
-	auto SocketReuseAddr()						-> bool;
-	auto SocketTcpNoDelay()						-> bool;
+	auto SocketConnectUpdate()					-> Error;
+	auto SocketReuseAddr()						-> Error;
+	auto SocketTcpNoDelay()						-> Error;
 
 private:
 	auto setMsg(WSABUF& dest, CHAR* msg, size_t size) -> bool;
