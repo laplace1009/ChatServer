@@ -151,9 +151,28 @@ auto Server::accept() -> void
 	}
 }
 
+auto Server::acceptRegister() -> void
+{
+	DWORD addrLen{ sizeof(SOCKADDR_IN) + 16 };
+	DWORD recvBytes{ 0 };
+	LPAsyncEndpoint client = xnew<AsyncEndpoint>();
+	Register(client);
+	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetEndpointRef().GetOverlappedRef())))
+	{
+		int error = WSAGetLastError();
+		if (error != WSA_IO_PENDING)
+		{
+			acceptRegister(client);
+			return;
+		}
+	}
+	setEventAccept(client);
+	mClients.emplace_back(client);
+}
+
 auto Server::acceptRegister(LPAsyncEndpoint client) -> void
 {
-	DWORD addrLen = sizeof(SOCKADDR_IN) + 16;
+	DWORD addrLen{ sizeof(SOCKADDR_IN) + 16 };
 	DWORD recvBytes{ 0 };
 
 	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetEndpointRef().GetOverlappedRef())))
@@ -176,7 +195,25 @@ auto Server::setMsg(WSABUF* dst, LPAsyncEndpoint src) -> void
 
 auto Server::doIOAction(LPAsyncEndpoint client) -> void
 {
-	client->GetEndpointRef().GetIOEvent();
+	IOEvent ioEvent = client->GetEndpointRef().GetIOEvent();
+	switch (ioEvent)
+	{
+	case IOEvent::ACCEPT:
+		afterIOAcceptEvent(client);
+		return;
+	case IOEvent::RECV:
+		afterIORecvEvent(client);
+		return;
+	case IOEvent::SEND:
+		afterIOSendEvent(client);
+		return;
+	case IOEvent::DISCONNECT:
+		afterIODisconnect(client);
+		return;
+	default:
+		CRASH("Do not reach this case");
+		return;
+	}
 }
 
 auto Server::setEventAccept(LPAsyncEndpoint client) -> void
@@ -194,18 +231,32 @@ auto Server::setEventSend(LPAsyncEndpoint client) -> void
 	client->GetEndpointRef().SetIOEvent(IOEvent::SEND);
 }
 
+auto Server::setEventDisconnect(LPAsyncEndpoint client) -> void
+{
+	client->GetEndpointRef().SetIOEvent(IOEvent::DISCONNECT);
+}
+
 auto Server::afterIOAcceptEvent(LPAsyncEndpoint client) -> void
 {
+	mListener.SocketAcceptUpdate(client);
 	setEventAccept(client);
 	SetRecv(client);
+	acceptRegister();
 }
 
 auto Server::afterIORecvEvent(LPAsyncEndpoint client) -> void
 {
 	WSABUF* buf = xnew<WSABUF>();
-	buf->buf = client->GetBufRef().buf;
-	buf->len = client->GetTransferredBytes();
-	mSendBuffs.emplace(&buf);
+	PacketHeader header = *(reinterpret_cast<PacketHeader*>(client->GetBufRef().buf));
+	//uint16 protocol = header.protocol;
+	buf->buf = client->GetBufRef().buf + 4;
+	buf->len = header.size;
+	ZeroMemory(client->GetBufRef().buf, buf->len);
+	{
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		mSendBuffs.emplace(&buf);
+	}
+	
 	Send();
 }
 
@@ -217,46 +268,6 @@ auto Server::afterIOSendEvent(LPAsyncEndpoint client) -> void
 
 auto Server::afterIODisconnect(LPAsyncEndpoint client) -> void
 {
-
+	setEventDisconnect(client);
 }
-
-//auto Server::IOAccept(LPAsyncEndpoint client) -> void
-//{
-//	if (mListener.SocketAcceptUpdate(client) == Error::NET_SOCKET_OPT_ERROR)
-//	{
-//		mListener.SocketAcceptUpdate(client);
-//	}
-//
-//	//if (SetRecv(client) == false)
-//	//	SetRecv(client);
-//}
-//
-//auto Server::IORecv(LPAsyncEndpoint src) -> void
-//{
-//	WSABUF* sendBuf = new WSABUF();
-//	sendBuf->buf = static_cast<CHAR*>(XALLOCATE(MAX_BUFF_SIZE));
-//	setMsg(sendBuf, src);
-//	src->GetBufRef().len = MAX_BUFF_SIZE;
-//	{
-//		WriteLockGuard<ReadWriteLock&> g(mLock);
-//		mSendBuffs.emplace(sendBuf);
-//	}
-//	Send();
-//}
-//
-//auto Server::IOSend(LPAsyncEndpoint client) -> void
-//{
-//	// Send 완료 통보후 다시 Recv로 바꿔서 받을수 있는 준비를 한다.
-//	client->GetEndpointRef().SetIOEvent(IOEvent::RECV);
-//}
-//
-//
-//auto Server::IODisconnect(LPAsyncEndpoint client) -> void
-//{
-//	if (AsyncStream::DisconnectEx(client->ConstGetSocket(), NULL, 0, 0) == false)
-//	{
-//		int error = WSAGetLastError();
-//		std::cerr << "DisconnectEx failed: " << error << std::endl;
-//	}
-//}
 

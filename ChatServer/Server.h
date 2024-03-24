@@ -35,17 +35,19 @@ public:
 	auto GetSocket() -> SOCKET;
 
 public:
-	auto Send() -> Error;
-	auto SetRecv(LPAsyncEndpoint client) -> Error;
+	auto Send()								-> Error;
+	auto SetRecv(LPAsyncEndpoint client)	-> Error;
 
 private:
 	auto accept()									-> void;
+	auto acceptRegister()							-> void;
 	auto acceptRegister(LPAsyncEndpoint client)		-> void;
 	auto setMsg(WSABUF* dst, LPAsyncEndpoint src)	-> void;
 	auto doIOAction(LPAsyncEndpoint client)			-> void;
 	auto setEventAccept(LPAsyncEndpoint client)		-> void;
 	auto setEventRecv(LPAsyncEndpoint client)		-> void;
 	auto setEventSend(LPAsyncEndpoint client)		-> void;
+	auto setEventDisconnect(LPAsyncEndpoint client) -> void;
 	auto afterIOAcceptEvent(LPAsyncEndpoint client) -> void;
 	auto afterIORecvEvent(LPAsyncEndpoint client)	-> void;
 	auto afterIOSendEvent(LPAsyncEndpoint client)	-> void;

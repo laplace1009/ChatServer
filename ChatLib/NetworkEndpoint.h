@@ -122,3 +122,16 @@ using TcpEndpoint = NetworkEndpoint<TcpStream>;
 using LPTcpEndPoint = NetworkEndpoint<TcpStream>*;
 using AsyncEndpoint = NetworkEndpoint<AsyncStream>;
 using LPAsyncEndpoint = NetworkEndpoint<AsyncStream>*;
+
+enum PacketProtocol : uint16
+{
+	LOG_IN,
+	LOG_OUT,
+	CHAT,
+};
+
+struct PacketHeader
+{
+	uint16 size;
+	uint16 protocol;
+};

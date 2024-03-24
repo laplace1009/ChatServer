@@ -19,6 +19,7 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OVERLAPPEDEX>() }, mSocket{ Creat
 AsyncStream::~AsyncStream() noexcept
 {
 	xdelete(mOverlapped);
+	closesocket(mSocket);
 }
 
 auto AsyncStream::Init() -> Error
