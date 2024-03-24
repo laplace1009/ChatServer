@@ -57,7 +57,8 @@ auto Client::Send(uint16 protocol, uint16 size, CHAR* msg) -> Error
 	buf.len = size + packetHeaderSize;
 	memcpy_s(buf.buf, buf.len, &header, packetHeaderSize);
 	memcpy_s(buf.buf + packetHeaderSize, buf.len - packetHeaderSize, msg, size);
-	
+	setEventSend();
+
 	return mClient->Send(&buf);
 }
 
