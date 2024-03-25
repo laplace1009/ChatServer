@@ -81,12 +81,6 @@ auto AsyncListener::Send(AsyncEndpoint* dest, CHAR* msg, size_t size)-> Error
 	return SOCKET_ERROR != WSASend(dest->GetEndpointRef().ConstGetSocket(), &mListener.GetBufRef(), 1, &mListener.GetTransferredBytesRef(), 0, mListener.GetEndpointRef().GetOverlappedRef(), NULL) ? Error::OK : Error::NET_SEND_ERROR;
 }
 
-
-//bool AsyncListener::SetSendMessage(Stream* client, std::wstring msg, DWORD msgSize)
-//{
-//	return memcpy_s(mListener.GetSendBufRef().buf, mListener.GetSendBufRef().len, msg.c_str(), msg.size() * sizeof(wchar_t)) == 0;
-//}
-
 const SOCKET AsyncListener::ConstGetSocket() const
 {
 	return mListener.ConstGetSocket();

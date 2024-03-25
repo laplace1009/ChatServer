@@ -178,8 +178,6 @@
     <ClInclude Include="ReadWriteLock.h" />
     <ClInclude Include="StlAllocator.h" />
     <ClInclude Include="StompAllocator.h" />
-    <ClInclude Include="TcpListener.h" />
-    <ClInclude Include="TcpStream.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Types.h" />
     <ClInclude Include="WriteLockGuard.h" />
@@ -212,8 +210,6 @@
     <ClCompile Include="ReadWriteLock.cpp" />
     <ClCompile Include="StlAllocator.cpp" />
     <ClCompile Include="StompAllocator.cpp" />
-    <ClCompile Include="TcpListener.cpp" />
-    <ClCompile Include="TcpStream.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="WriteLockGuard.cpp" />
     <ClCompile Include="ChatLib.cpp" />

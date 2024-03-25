@@ -33,9 +33,6 @@
     <Filter Include="Error">
       <UniqueIdentifier>{b63f71f3-817e-4dad-8559-edad57e1f214}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Worker">
-      <UniqueIdentifier>{7cfefd26-6e39-48cb-925b-a64287b043a8}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TLS.h">
@@ -103,12 +100,6 @@
     </ClInclude>
     <ClInclude Include="Global.h">
       <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="TcpStream.h">
-      <Filter>Network</Filter>
-    </ClInclude>
-    <ClInclude Include="TcpListener.h">
-      <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Macro.h">
       <Filter>Macro</Filter>
@@ -192,12 +183,6 @@
     </ClCompile>
     <ClCompile Include="CorePch.cpp">
       <Filter>Main</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpStream.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="TcpListener.cpp">
-      <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Global.cpp">
       <Filter>Main</Filter>

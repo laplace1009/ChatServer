@@ -1,7 +1,6 @@
 #pragma once
 #include "Types.h"
 #include "Error.h"
-#include "TcpStream.h"
 #include "AsyncStream.h"
 
 template<typename T>
