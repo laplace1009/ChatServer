@@ -16,6 +16,7 @@ class alignas(64) Server : public IOCP
 	enum : uint16
 	{
 		MAX_MEMEBERS = 100,
+		ACCEPT_COUNT = 16,
 	};
 
 public:

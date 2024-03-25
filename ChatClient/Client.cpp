@@ -3,14 +3,16 @@
 
 Client::Client()
 {
+	mClient = xnew<AsyncEndpoint>();
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
-	ASSERT_CRASH(AsyncStream::Init() != Error::OK);
+	ASSERT_CRASH(AsyncStream::Init() == Error::OK);
 	Register(mClient);
 }
 
 Client::~Client()
 {
+	xdelete<AsyncEndpoint>(mClient);
 	CloseHandle(mHandle);
 }
 
@@ -27,11 +29,10 @@ Error Client::Dispatch()
 	ULONG_PTR key;
 	DWORD transferred = 0;
 	LPOVERLAPPEDEX retOver = nullptr;
-	LPAsyncEndpoint client = nullptr;
+	//LPAsyncEndpoint client = nullptr;
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
-		client = reinterpret_cast<LPAsyncEndpoint>(retOver->owner);
-
+		std::cout << "IOCP Client" << std::endl;
 		doIOAction();
 	}
 	else
@@ -40,18 +41,28 @@ Error Client::Dispatch()
 		switch (error)
 		{
 		case WAIT_TIMEOUT:
-			return Error::IOCP_DISPATCH_ERROR;
+			return Error::OK;
 		default:
-
+			return Error::IOCP_DISPATCH_ERROR;
 		}
 	}
 	return Error::OK;
 }
 
+auto Client::Connect(String addr, uint16 port) -> Error
+{
+	if (mClient->BindAny(0) == Error::NET_BIND_ERROR)
+		return Error::NET_BIND_ERROR;
+
+	mClient->SetAddr(addr, port);
+
+	return mClient->Connect();
+}
+
 auto Client::Send(uint16 protocol, uint16 size, CHAR* msg) -> Error
 {
-	uint16 packetHeaderSize = sizeof(PacketHeader);
-	PacketHeader header{ protocol, size + packetHeaderSize };
+	uint16 packetHeaderSize = static_cast<uint16>(sizeof(PacketHeader));
+	PacketHeader header{ size + packetHeaderSize, protocol };
 	WSABUF buf;
 	buf.buf = new CHAR[size + packetHeaderSize];
 	buf.len = size + packetHeaderSize;
@@ -124,6 +135,9 @@ auto Client::afterIOConnectEvent() -> void
 auto Client::afterIORecvEvent() -> void
 {
 	PacketHeader header = *reinterpret_cast<PacketHeader*>(mClient->GetBufRef().buf);
+	char* buf = new char[mClient->GetBufRef().len - sizeof(PacketHeader)];
+	memcpy_s(buf, mClient->GetBufRef().len - sizeof(PacketHeader), mClient->GetBufRef().buf + 4, mClient->GetBufRef().len - sizeof(PacketHeader));
+	std::cout << "Client Recv Msg: " << buf << std::endl;
 	// 상황에 맞게 구현
 }
 

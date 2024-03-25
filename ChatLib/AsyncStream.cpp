@@ -12,8 +12,8 @@ AsyncStream::AsyncStream() : mOverlapped{ xnew<OVERLAPPEDEX>() }, mSocket{ Creat
 	ZeroMemory(mOverlapped, sizeof(OVERLAPPEDEX));
 	ZeroMemory(&mAddr, sizeof(mAddr));
 	mOverlapped->ioEvent = IOEvent::CONNECT;
-	ASSERT_CRASH(SocketReuseAddr() != Error::OK);
-	ASSERT_CRASH(SocketTcpNoDelay() != Error::OK);
+	ASSERT_CRASH(SocketReuseAddr() == Error::OK);
+	ASSERT_CRASH(SocketTcpNoDelay() == Error::OK);
 }
 
 AsyncStream::~AsyncStream() noexcept
@@ -44,7 +44,7 @@ Error AsyncStream::BindAny(uint16 port)
 	mAddr.sin_family = AF_INET;
 	mAddr.sin_port = htons(port);
 	mAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0)
+	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
 		return Error::OK;
 
 	return Error::NET_BIND_ERROR;
@@ -53,7 +53,7 @@ Error AsyncStream::BindAny(uint16 port)
 Error AsyncStream::Bind(std::string addr, uint16 port)
 {
 	SetAddr(addr, port);
-	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) == 0)
+	if (bind(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
 		return Error::OK;
 
 	return Error::NET_BIND_ERROR;
@@ -61,7 +61,18 @@ Error AsyncStream::Bind(std::string addr, uint16 port)
 
 Error AsyncStream::Connect(DWORD* bytes)
 {
-	return AsyncStream::ConnectEx(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr), nullptr, 0, bytes, static_cast<LPOVERLAPPED>(mOverlapped)) ? Error::OK : Error::NET_CONNECT_ERROR;
+	if (AsyncStream::ConnectEx(mSocket, reinterpret_cast<PSOCKADDR>(&mAddr), sizeof(mAddr), nullptr, 0, bytes, static_cast<LPOVERLAPPED>(mOverlapped)))
+		return Error::OK;
+	else
+	{
+		int error = WSAGetLastError();
+		if (error == WSA_IO_PENDING)
+			return Error::OK;
+		else
+			std::cerr << error << std::endl;
+	}
+	
+	return  Error::NET_CONNECT_ERROR;
 }
 
 Error AsyncStream::Recv(WSABUF* buf, DWORD* bytes)

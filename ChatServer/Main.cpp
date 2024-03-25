@@ -1,30 +1,45 @@
 #include "pch.h"
-#include <iostream>
 #include "Server.h"
+#include "AsyncListener.h"
 
 using namespace std;
 
+auto DoJobWorker(Server& server) -> void;
+
 int main(void)
 {
-	Server server;
-	server.Start(8000);
+	SYSTEM_INFO systeminfo;
+	GetSystemInfo(&systeminfo);
+	DWORD threadCounts = systeminfo.dwNumberOfProcessors;
+	
+	if (NetworkInit() == Error::NET_WSA_INIT_ERROR)
+		return 1;
 
-	/*for (int i = 0; i < 1; ++i)
+	Server server;
+	Error serverRunError = server.Run(8000);
+	if (serverRunError == Error::NET_BIND_ERROR || serverRunError == Error::NET_LISTEN_ERROR)
+	{
+		std::cerr << "Server Run Error\n";
+	}
+
+	for (size_t i = 0; i < threadCounts; ++i)
 	{
 		GThreads->Launch([&server]()
 			{
-				server.IOAction();
+				DoJobWorker(server);
 			});
 	}
 
-	GThreads->Join();
-	server.Close();*/
+	return 0;
+}
+
+auto DoJobWorker(Server& server) -> void
+{
 	while (true)
 	{
-		server.Accept();
-		::Sleep(500);
+		if (server.Dispatch() == Error::IOCP_DISPATCH_ERROR)
+		{
+			std::cerr << "IOCP Error\n";
+		}
 	}
-	getchar();
-	
-	return 0;
 }

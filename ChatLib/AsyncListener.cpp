@@ -3,7 +3,7 @@
 
 AsyncListener::AsyncListener()
 {
-	ASSERT_CRASH(AsyncStream::Init() != Error::OK);
+	ASSERT_CRASH(AsyncStream::Init() == Error::OK);
 }
 
 Error AsyncListener::BindAny(uint16 port)

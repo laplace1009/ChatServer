@@ -12,19 +12,20 @@ public:
 	Error Dispatch()								override;
 
 public:
+	auto Connect(String addr, uint16 port) -> Error;
 	auto Send(uint16 protocol, uint16 size, CHAR* msg) -> Error;
 	auto SetRecv() -> Error;
 
 private:
-	auto doIOAction() -> void;
-	auto setEventConnect() -> void;
-	auto setEventRecv() -> void;
-	auto setEventSend() -> void;
-	auto setEventDisconnect() -> void;
-	auto afterIOConnectEvent() -> void;
-	auto afterIORecvEvent() -> void;
-	auto afterIOSendEvent() -> void;
-	auto afterIODisconnect() -> void;
+	auto doIOAction()			-> void;
+	auto setEventConnect()		-> void;
+	auto setEventRecv()			-> void;
+	auto setEventSend()			-> void;
+	auto setEventDisconnect()	-> void;
+	auto afterIOConnectEvent()	-> void;
+	auto afterIORecvEvent()		-> void;
+	auto afterIOSendEvent()		-> void;
+	auto afterIODisconnect()	-> void;
 
 private:
 	LPAsyncEndpoint	mClient;

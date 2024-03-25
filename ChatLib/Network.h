@@ -29,7 +29,7 @@ inline Error NetworkInit()
 {
 	WSADATA wsa;
 
-	return WSAStartup(MAKEWORD(2, 2), &wsa) != 0 ? Error::OK : Error::NET_WSA_INIT_ERROR;
+	return WSAStartup(MAKEWORD(2, 2), &wsa) != 0 ? Error::NET_WSA_INIT_ERROR : Error::OK;
 }
 
 inline SOCKET CreateSocket() 

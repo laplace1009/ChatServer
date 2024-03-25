@@ -7,7 +7,7 @@ Server::Server()
 {
 	mHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, 0, 0, 0);
 	ASSERT_CRASH(mHandle != NULL);
-	ASSERT_CRASH(AsyncStream::Init() != Error::OK);
+	ASSERT_CRASH(AsyncStream::Init() == Error::OK);
 }
 
 Server::~Server() noexcept
@@ -44,10 +44,10 @@ Error Server::Dispatch()
 	DWORD transferred = 0;
 	LPOVERLAPPEDEX retOver = nullptr;
 	LPAsyncEndpoint client = nullptr;
-	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
+	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 100))
 	{
 		client = reinterpret_cast<LPAsyncEndpoint>(retOver->owner);
-
+		std::cout << "IOCP Server" << std::endl;
 		doIOAction(client);
 	}
 	else
@@ -56,9 +56,9 @@ Error Server::Dispatch()
 		switch (error)
 		{
 		case WAIT_TIMEOUT:
-			return Error::IOCP_DISPATCH_ERROR;
+			return Error::OK;
 		default:
-			
+			return Error::IOCP_DISPATCH_ERROR;
 		}
 	}
 	return Error::OK;
@@ -66,8 +66,12 @@ Error Server::Dispatch()
 
 auto Server::Run(uint16 port) -> Error
 {
-	if (Error::NET_BIND_ERROR == mListener.BindAny(port))
+	Error error = mListener.BindAny(port);
+	if (Error::NET_BIND_ERROR == error)
 		return Error::NET_BIND_ERROR;
+
+	if (Error::NET_LISTEN_ERROR == error)
+		return Error::NET_LISTEN_ERROR;
 
 	if (Error::IOCP_REGISTER_ERROR == Register(&mListener.GetAsyncStreamRef()))
 		return Error::IOCP_REGISTER_ERROR;
@@ -79,8 +83,12 @@ auto Server::Run(uint16 port) -> Error
 
 auto Server::Run(std::string addr, uint16 port) -> Error
 {
-	if (Error::NET_BIND_ERROR == mListener.Bind(addr, port))
+	Error error = mListener.Bind(addr, port);
+	if (Error::NET_BIND_ERROR == error)
 		return Error::NET_BIND_ERROR;
+
+	if (Error::NET_LISTEN_ERROR == error)
+		return Error::NET_LISTEN_ERROR;
 
 	if (Error::IOCP_REGISTER_ERROR == Register(&mListener.GetAsyncStreamRef()))
 		return Error::IOCP_REGISTER_ERROR;
@@ -120,9 +128,10 @@ auto Server::Send() -> Error
 
 		{
 			WriteLockGuard<ReadWriteLock&> g(mLock);
-			for (auto& client : mClients)
+
+			for (size_t i = 0; i < mClients.size() - ACCEPT_COUNT; ++i)
 			{
-				client->Send(sendBuf);
+				mClients[i]->Send(sendBuf);
 			}
 		}
 	}
@@ -141,12 +150,15 @@ auto Server::SetRecv(LPAsyncEndpoint client) -> Error
 
 auto Server::accept() -> void
 {
-	const int32 acceptCount = 1;
+	const int32 acceptCount = ACCEPT_COUNT;
 	for (int32 i = 0; i < acceptCount; ++i)
 	{
 		LPAsyncEndpoint client = xnew<AsyncEndpoint>();
 		ASSERT_CRASH(Register(client) != Error::IOCP_REGISTER_ERROR);
-		mClients.emplace_back(client);
+		{
+			WriteLockGuard<ReadWriteLock&> g(mLock);
+			mClients.emplace_back(client);
+		}
 		acceptRegister(client);
 	}
 }
@@ -155,8 +167,8 @@ auto Server::acceptRegister() -> void
 {
 	DWORD addrLen{ sizeof(SOCKADDR_IN) + 16 };
 	DWORD recvBytes{ 0 };
-	LPAsyncEndpoint client = xnew<AsyncEndpoint>();
-	Register(client);
+	LPAsyncEndpoint client = new AsyncEndpoint();
+	while (Register(client) == Error::IOCP_REGISTER_ERROR);
 	if (false == AsyncStream::AcceptEx(mListener.ConstGetSocket(), client->ConstGetSocket(), client->GetBufRef().buf, 0, addrLen, addrLen, OUT & recvBytes, OUT static_cast<LPOVERLAPPED>(client->GetEndpointRef().GetOverlappedRef())))
 	{
 		int error = WSAGetLastError();
@@ -167,7 +179,11 @@ auto Server::acceptRegister() -> void
 		}
 	}
 	setEventAccept(client);
-	mClients.emplace_back(client);
+
+	{
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		mClients.emplace_back(client);
+	}
 }
 
 auto Server::acceptRegister(LPAsyncEndpoint client) -> void
@@ -248,13 +264,14 @@ auto Server::afterIORecvEvent(LPAsyncEndpoint client) -> void
 {
 	WSABUF* buf = xnew<WSABUF>();
 	PacketHeader header = *(reinterpret_cast<PacketHeader*>(client->GetBufRef().buf));
-	//uint16 protocol = header.protocol;
-	buf->buf = client->GetBufRef().buf + 4;
+	buf->buf = new char[1024];
+	memcpy_s(buf->buf, 1024, client->GetBufRef().buf, header.size);
 	buf->len = header.size;
 	ZeroMemory(client->GetBufRef().buf, buf->len);
+	client->GetTransferredBytesRef() = 0;
 	{
 		WriteLockGuard<ReadWriteLock&> g(mLock);
-		mSendBuffs.emplace(&buf);
+		mSendBuffs.emplace(buf);
 	}
 	
 	Send();
