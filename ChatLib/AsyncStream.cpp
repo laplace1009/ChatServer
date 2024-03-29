@@ -9,8 +9,8 @@ LPFN_GETACCEPTEXSOCKADDRS	AsyncStream::GetAcceptExSockaddrs = nullptr;
 AsyncStream::AsyncStream() : mOverlapped{ xnew<OVERLAPPEDEX>() }, mSocket{ CreateSocket() }
 {
 	ASSERT_CRASH(mSocket != INVALID_SOCKET);
-	ZeroMemory(mOverlapped, sizeof(OVERLAPPEDEX));
 	ZeroMemory(&mAddr, sizeof(mAddr));
+	ZeroMemory(mOverlapped, sizeof(OVERLAPPEDEX));
 	mOverlapped->ioEvent = IOEvent::CONNECT;
 	ASSERT_CRASH(SocketReuseAddr() == Error::OK);
 	ASSERT_CRASH(SocketTcpNoDelay() == Error::OK);
@@ -75,10 +75,10 @@ Error AsyncStream::Connect(DWORD* bytes)
 	return  Error::NET_CONNECT_ERROR;
 }
 
-Error AsyncStream::Recv(WSABUF* buf, DWORD* bytes)
+Error AsyncStream::Recv(WSABUF* recvBuf, DWORD* bytes)
 {
 	DWORD flags = 0;
-	if (WSARecv(mSocket, buf, 1, bytes, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
+	if (WSARecv(mSocket, recvBuf, 1, bytes, OUT & flags, static_cast<LPOVERLAPPED>(mOverlapped), NULL) == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 		if (error != WSA_IO_PENDING)

@@ -47,7 +47,6 @@ Error Server::Dispatch()
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 100))
 	{
 		client = reinterpret_cast<LPAsyncEndpoint>(retOver->owner);
-		std::cout << "IOCP Server" << std::endl;
 		doIOAction(client);
 	}
 	else
@@ -110,27 +109,17 @@ auto Server::GetSocket() -> SOCKET
 
 auto Server::Send() -> Error
 {
-	while (mSendBuffs.empty() == false)
+	
 	{
-		WSABUF* sendBuf = nullptr;
+		WriteLockGuard<ReadWriteLock&> g(mLock);
+		while (mSendBuffs.empty() == false)
 		{
-			WriteLockGuard<ReadWriteLock&> g(mLock);
-			if (mSendBuffs.empty() == false)
-			{
-				sendBuf = mSendBuffs.front();
-				mSendBuffs.pop();
-			}
-			else
-			{
-				return Error::SERVER_EMPTY_SENDBUFFS;
-			}
-		}
-
-		{
-			WriteLockGuard<ReadWriteLock&> g(mLock);
+			WSABUF* sendBuf = mSendBuffs.front();
+			mSendBuffs.pop();
 
 			for (size_t i = 0; i < mClients.size() - ACCEPT_COUNT; ++i)
 			{
+				mClients[i]->GetEndpointRef().SetIOEvent(IOEvent::SEND);
 				mClients[i]->Send(sendBuf);
 			}
 		}
@@ -255,7 +244,7 @@ auto Server::setEventDisconnect(LPAsyncEndpoint client) -> void
 auto Server::afterIOAcceptEvent(LPAsyncEndpoint client) -> void
 {
 	mListener.SocketAcceptUpdate(client);
-	setEventAccept(client);
+	std::cout << "New Client Accept!" << std::endl;
 	SetRecv(client);
 	acceptRegister();
 }
@@ -265,6 +254,7 @@ auto Server::afterIORecvEvent(LPAsyncEndpoint client) -> void
 	WSABUF* buf = xnew<WSABUF>();
 	PacketHeader header = *(reinterpret_cast<PacketHeader*>(client->GetBufRef().buf));
 	buf->buf = new char[1024];
+	ZeroMemory(buf->buf, 1024);
 	memcpy_s(buf->buf, 1024, client->GetBufRef().buf, header.size);
 	buf->len = header.size;
 	ZeroMemory(client->GetBufRef().buf, buf->len);
@@ -280,7 +270,7 @@ auto Server::afterIORecvEvent(LPAsyncEndpoint client) -> void
 auto Server::afterIOSendEvent(LPAsyncEndpoint client) -> void
 {
 	setEventRecv(client);
-	client->GetTransferredBytesRef() = 0;
+	client->Recv();
 }
 
 auto Server::afterIODisconnect(LPAsyncEndpoint client) -> void

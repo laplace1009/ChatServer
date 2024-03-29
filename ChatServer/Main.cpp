@@ -21,8 +21,7 @@ int main(void)
 	{
 		std::cerr << "Server Run Error\n";
 	}
-
-	for (size_t i = 0; i < threadCounts - 1; ++i)
+	for (size_t i = 0; i < 1; ++i)
 	{
 		GThreads->Launch([&server]()
 			{

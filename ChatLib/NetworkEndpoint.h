@@ -117,8 +117,6 @@ private:
 	DWORD mTransferredBytes;
 };
 
-using TcpEndpoint = NetworkEndpoint<TcpStream>;
-using LPTcpEndPoint = NetworkEndpoint<TcpStream>*;
 using AsyncEndpoint = NetworkEndpoint<AsyncStream>;
 using LPAsyncEndpoint = NetworkEndpoint<AsyncStream>*;
 

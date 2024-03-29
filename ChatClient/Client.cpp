@@ -29,10 +29,8 @@ Error Client::Dispatch()
 	ULONG_PTR key;
 	DWORD transferred = 0;
 	LPOVERLAPPEDEX retOver = nullptr;
-	//LPAsyncEndpoint client = nullptr;
 	if (GetQueuedCompletionStatus(mHandle, &transferred, &key, reinterpret_cast<LPOVERLAPPED*>(&retOver), 1000))
 	{
-		std::cout << "IOCP Client" << std::endl;
 		doIOAction();
 	}
 	else
@@ -75,9 +73,11 @@ auto Client::Send(uint16 protocol, uint16 size, CHAR* msg) -> Error
 
 auto Client::SetRecv() -> Error
 {
+	ZeroMemory(mClient->GetBufRef().buf, MAX_BUFF_SIZE);
+	mClient->GetBufRef().len = MAX_BUFF_SIZE;
+	setEventRecv();
 	if (mClient->Recv() == Error::NET_RECV_ERROR)
 		return Error::NET_RECV_ERROR;
-	setEventRecv();
 
 	return Error::OK;
 }
@@ -127,7 +127,9 @@ auto Client::setEventDisconnect() -> void
 
 auto Client::afterIOConnectEvent() -> void
 {
-	mClient->SocketConnectUpdate();
+	std::cout << "Connect Server!" << std::endl;
+	if (mClient->SocketConnectUpdate() != Error::NET_CONNECT_ERROR)
+	
 	if (SetRecv() == Error::NET_RECV_ERROR)
 		return;
 }
@@ -135,17 +137,17 @@ auto Client::afterIOConnectEvent() -> void
 auto Client::afterIORecvEvent() -> void
 {
 	PacketHeader header = *reinterpret_cast<PacketHeader*>(mClient->GetBufRef().buf);
-	char* buf = new char[mClient->GetBufRef().len - sizeof(PacketHeader)];
-	memcpy_s(buf, mClient->GetBufRef().len - sizeof(PacketHeader), mClient->GetBufRef().buf + 4, mClient->GetBufRef().len - sizeof(PacketHeader));
-	std::cout << "Client Recv Msg: " << buf << std::endl;
-	// 상황에 맞게 구현
+	char* buf = new char[header.size - sizeof(PacketHeader) + 1];
+	memcpy_s(buf, header.size - sizeof(PacketHeader), mClient->GetBufRef().buf + sizeof(PacketHeader), header.size - sizeof(PacketHeader));
+	buf[header.size - sizeof(PacketHeader)] = '\0';
+	std::cout << "Chat Server: " << buf << std::endl;
+	if (Error::NET_RECV_ERROR == SetRecv())
+		std::cerr << "Client Recv Error" << std::endl;
 }
 
 auto Client::afterIOSendEvent() -> void
 {
-	setEventRecv();
-	ZeroMemory(mClient->GetBufRef().buf, MAX_BUFF_SIZE);
-	mClient->GetBufRef().len = MAX_BUFF_SIZE;
+	SetRecv();
 }
 
 auto Client::afterIODisconnect() -> void
