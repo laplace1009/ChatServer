@@ -1,14 +1,13 @@
 # ChatServer
+이 프로젝트는 c++, windows api를 이용하여 개발되었습니다.
 
-### Windows Simple Chat Server
+## 기능
+- iocp구현
+- 멀티 스레드 구현
+- 여러 사람이 동시에 채팅을 치면 처리합니다.
 
-#### C++20 MSVC
+## 시작하기
+clone을 받아 Visual Studio에서 실행을 시키면 돕니다.
 
-##### Used Library
-* 커스템 메모리 할당 라이브러리 사용
-* 커스텀 ReadWriteLock 라이브러리 사용
-* Windows Network Library 사용
-
-##### Server
-* 멀티스레드를 사용함
-* LPFN 함수 시리즈를 사용하기 때문에 비동기 연산이며 IOCP로 응답을 받음
+### 전제 조건
+- MSVC C++ 20
