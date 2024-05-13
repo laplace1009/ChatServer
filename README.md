@@ -11,3 +11,4 @@ clone을 받아 Visual Studio에서 실행을 시키면 돕니다.
 
 ### 전제 조건
 - MSVC C++ 20
+- Visual Studio 2022
